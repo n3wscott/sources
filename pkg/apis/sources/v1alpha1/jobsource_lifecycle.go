@@ -28,7 +28,7 @@ func (js *JobSource) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("JobSource")
 }
 
-func (js *JobSource) InitializeConditions() {
+func (jss *JobSourceStatus) InitializeConditions() {
 	condSet.Manage(jss).InitializeConditions()
 }
 

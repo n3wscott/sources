@@ -14,14 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package addressableservice
+package jobsource
 
 import (
 	"context"
 
-	svcinformer "knative.dev/pkg/injection/informers/kubeinformers/corev1/service"
-	asclient "knative.dev/sample-controller/pkg/client/injection/client"
-	asinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
+	jsclient "github.com/n3wscott/sources/pkg/client/injection/client"
+	jsinformer "github.com/n3wscott/sources/pkg/client/injection/informers/sources/v1alpha1/jobsource"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -33,7 +32,7 @@ import (
 )
 
 const (
-	controllerAgentName = "addressableservice-controller"
+	controllerAgentName = "jobsource-controller"
 )
 
 // NewController returns a new HPA reconcile controller.
@@ -43,31 +42,20 @@ func NewController(
 ) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
-	asInformer := asinformer.Get(ctx)
-	svcInformer := svcinformer.Get(ctx)
+	jsInformer := jsinformer.Get(ctx)
 
 	c := &Reconciler{
-		Client:        asclient.Get(ctx),
-		Lister:        asInformer.Lister(),
-		ServiceLister: svcInformer.Lister(),
+		Client: jsclient.Get(ctx),
+		Lister: jsInformer.Lister(),
 		Recorder: record.NewBroadcaster().NewRecorder(
 			scheme.Scheme, corev1.EventSource{Component: controllerAgentName}),
 	}
-	impl := controller.NewImpl(c, logger, "AddressableServices")
+	impl := controller.NewImpl(c, logger, "JobSources")
 
 	logger.Info("Setting up event handlers")
 
-	asInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	jsInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	c.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
-	svcInformer.Informer().AddEventHandler(controller.HandleAll(
-		// Call the tracker's OnChanged method, but we've seen the objects
-		// coming through this path missing TypeMeta, so ensure it is properly
-		// populated.
-		controller.EnsureTypeMeta(
-			c.Tracker.OnChanged,
-			corev1.SchemeGroupVersion.WithKind("Service"),
-		),
-	))
 	return impl
 }

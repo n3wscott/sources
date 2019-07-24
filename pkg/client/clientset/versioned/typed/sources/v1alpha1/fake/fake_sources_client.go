@@ -19,22 +19,22 @@ limitations under the License.
 package fake
 
 import (
+	v1alpha1 "github.com/n3wscott/sources/pkg/client/clientset/versioned/typed/sources/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
-	v1alpha1 "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1alpha1"
 )
 
-type FakeSamplesV1alpha1 struct {
+type FakeSourcesV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeSamplesV1alpha1) AddressableServices(namespace string) v1alpha1.AddressableServiceInterface {
-	return &FakeAddressableServices{c, namespace}
+func (c *FakeSourcesV1alpha1) JobSources(namespace string) v1alpha1.JobSourceInterface {
+	return &FakeJobSources{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeSamplesV1alpha1) RESTClient() rest.Interface {
+func (c *FakeSourcesV1alpha1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

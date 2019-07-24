@@ -24,7 +24,7 @@ import (
 
 // Validate implements apis.Validatable
 func (js *JobSource) Validate(ctx context.Context) *apis.FieldError {
-	return as.Spec.Validate(ctx).ViaField("spec")
+	return js.Spec.Validate(ctx).ViaField("spec")
 }
 
 // Validate implements apis.Validatable

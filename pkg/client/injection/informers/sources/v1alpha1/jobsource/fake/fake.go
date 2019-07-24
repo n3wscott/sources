@@ -21,21 +21,20 @@ package fake
 import (
 	"context"
 
+	fake "github.com/n3wscott/sources/pkg/client/injection/informers/sources/factory/fake"
+	jobsource "github.com/n3wscott/sources/pkg/client/injection/informers/sources/v1alpha1/jobsource"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
-	externalversions "knative.dev/sample-controller/pkg/client/informers/externalversions"
-	fake "knative.dev/sample-controller/pkg/client/injection/client/fake"
-	factory "knative.dev/sample-controller/pkg/client/injection/informers/samples/factory"
 )
 
-var Get = factory.Get
+var Get = jobsource.Get
 
 func init() {
-	injection.Fake.RegisterInformerFactory(withInformerFactory)
+	injection.Fake.RegisterInformer(withInformer)
 }
 
-func withInformerFactory(ctx context.Context) context.Context {
-	c := fake.Get(ctx)
-	return context.WithValue(ctx, factory.Key{},
-		externalversions.NewSharedInformerFactory(c, controller.GetResyncPeriod(ctx)))
+func withInformer(ctx context.Context) (context.Context, controller.Informer) {
+	f := fake.Get(ctx)
+	inf := f.Sources().V1alpha1().JobSources()
+	return context.WithValue(ctx, jobsource.Key{}, inf), inf.Informer()
 }

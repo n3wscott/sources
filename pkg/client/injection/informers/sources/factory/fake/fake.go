@@ -21,20 +21,21 @@ package fake
 import (
 	"context"
 
+	externalversions "github.com/n3wscott/sources/pkg/client/informers/externalversions"
+	fake "github.com/n3wscott/sources/pkg/client/injection/client/fake"
+	factory "github.com/n3wscott/sources/pkg/client/injection/informers/sources/factory"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
-	fake "knative.dev/sample-controller/pkg/client/injection/informers/samples/factory/fake"
-	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
 )
 
-var Get = addressableservice.Get
+var Get = factory.Get
 
 func init() {
-	injection.Fake.RegisterInformer(withInformer)
+	injection.Fake.RegisterInformerFactory(withInformerFactory)
 }
 
-func withInformer(ctx context.Context) (context.Context, controller.Informer) {
-	f := fake.Get(ctx)
-	inf := f.Samples().V1alpha1().AddressableServices()
-	return context.WithValue(ctx, addressableservice.Key{}, inf), inf.Informer()
+func withInformerFactory(ctx context.Context) context.Context {
+	c := fake.Get(ctx)
+	return context.WithValue(ctx, factory.Key{},
+		externalversions.NewSharedInformerFactory(c, controller.GetResyncPeriod(ctx)))
 }

@@ -16,9 +16,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: webhook
-  namespace: knative-samples
+  namespace: knative-eventing
   labels:
-    samples.knative.dev/release: devel
+    sources.knative.dev/release: devel
 spec:
   replicas: 1
   selector:
@@ -32,14 +32,14 @@ spec:
       labels:
         app: webhook
         role: webhook
-        samples.knative.dev/release: devel
+        sources.knative.dev/release: devel
     spec:
       serviceAccountName: controller
       containers:
       - name: webhook
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: knative.dev/sample-controller/cmd/webhook
+        image: github.com/n3wscott/sources/cmd/webhook
         resources:
           # Request 2x what we saw running e2e
           requests:
