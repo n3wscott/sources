@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors
+Copyright 2019 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,8 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package samples
+package v1alpha1
 
-const (
-	GroupName = "samples.knative.dev"
+import (
+	"context"
 )
+
+// SetDefaults implements apis.Defaultable
+func (js *JobSource) SetDefaults(ctx context.Context) {
+	// TODO(spencer-p) output type should have a default
+}

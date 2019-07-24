@@ -24,21 +24,22 @@ import (
 var condSet = apis.NewLivingConditionSet()
 
 // GetGroupVersionKind implements kmeta.OwnerRefable
-func (as *AddressableService) GetGroupVersionKind() schema.GroupVersionKind {
-	return SchemeGroupVersion.WithKind("AddressableService")
+func (js *JobSource) GetGroupVersionKind() schema.GroupVersionKind {
+	return SchemeGroupVersion.WithKind("JobSource")
 }
 
-func (ass *AddressableServiceStatus) InitializeConditions() {
-	condSet.Manage(ass).InitializeConditions()
+func (js *JobSource) InitializeConditions() {
+	condSet.Manage(jss).InitializeConditions()
 }
 
-func (ass *AddressableServiceStatus) MarkServiceUnavailable(name string) {
-	condSet.Manage(ass).MarkFalse(
-		AddressableServiceConditionReady,
+// TODO(spencer-p) We might not need ConditionReady
+func (jss *JobSourceStatus) MarkServiceUnavailable(name string) {
+	condSet.Manage(jss).MarkFalse(
+		JobSourceConditionReady,
 		"ServiceUnavailable",
 		"Service %q wasn't found.", name)
 }
 
-func (ass *AddressableServiceStatus) MarkServiceAvailable() {
-	condSet.Manage(ass).MarkTrue(AddressableServiceConditionReady)
+func (jss *JobSourceStatus) MarkServiceAvailable() {
+	condSet.Manage(jss).MarkTrue(JobSourceConditionReady)
 }
