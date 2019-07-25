@@ -102,17 +102,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	return reconcileErr
 }
 
-func (r *Reconciler) reconcile(ctx context.Context, asvc *v1alpha1.JobSource) error {
-	if asvc.GetDeletionTimestamp() != nil {
+func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) error {
+	if js.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
 		// When a controller needs finalizer handling, it would go here.
 		return nil
 	}
-	asvc.Status.InitializeConditions()
+	js.Status.InitializeConditions()
 
 	// TODO(spencer-p) implement this method
 
-	asvc.Status.ObservedGeneration = asvc.Generation
+	js.Status.ObservedGeneration = js.Generation
 	return nil
 }
 

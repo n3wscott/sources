@@ -19,7 +19,7 @@ package jobsource
 import (
 	"context"
 
-	jsclient "github.com/n3wscott/sources/pkg/client/injection/client"
+	sourcesclient "github.com/n3wscott/sources/pkg/client/injection/client"
 	jsinformer "github.com/n3wscott/sources/pkg/client/injection/informers/sources/v1alpha1/jobsource"
 
 	corev1 "k8s.io/api/core/v1"
@@ -45,7 +45,7 @@ func NewController(
 	jsInformer := jsinformer.Get(ctx)
 
 	c := &Reconciler{
-		Client: jsclient.Get(ctx),
+		Client: sourcesclient.Get(ctx),
 		Lister: jsInformer.Lister(),
 		Recorder: record.NewBroadcaster().NewRecorder(
 			scheme.Scheme, corev1.EventSource{Component: controllerAgentName}),

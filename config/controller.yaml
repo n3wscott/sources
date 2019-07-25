@@ -63,7 +63,6 @@ spec:
         - name: CONFIG_OBSERVABILITY_NAME
           value: config-observability
         - name: METRICS_DOMAIN
-          # TODO(spencer-p) What should this be?
           value: knative.dev/sources
       volumes:
         - name: config-logging

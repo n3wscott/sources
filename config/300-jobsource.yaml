@@ -15,7 +15,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: jobsource.sources.knative.dev
+  name: jobsources.sources.knative.dev
   labels:
     sources.knative.dev/release: devel
     knative.dev/crd-install: "true"
@@ -30,15 +30,8 @@ spec:
     - all
     - knative
     shortNames:
-    - asvc
+    - js
   scope: Namespaced
   subresources:
     status: {}
-  additionalPrinterColumns:
-    # TODO(spencer-p) I already deleted Address; are these necessary?
-  - name: Ready
-    type: string
-    JSONPath: ".status.conditions[?(@.type=='Ready')].status"
-  - name: Reason
-    type: string
-    JSONPath: ".status.conditions[?(@.type=='Ready')].reason"
+  # TODO(spencer-p) additionalPrinterColumns

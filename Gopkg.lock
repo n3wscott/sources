@@ -1065,21 +1065,6 @@
   pruneopts = "T"
   revision = "74c5d67ea097dd45bc66a6e2212ff70058efe005"
 
-[[projects]]
-  branch = "master"
-  digest = "1:9d09187c164deea85dc15b0bb22f8c22b0070054353561b49b58a2f869523d3e"
-  name = "knative.dev/sample-controller"
-  packages = [
-    "pkg/apis/sources",
-    "pkg/apis/sources/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
-    "pkg/client/informers/externalversions/internalinterfaces",
-  ]
-  pruneopts = "NUT"
-  revision = "a27f1f3098ec260654b1767bbd5023abe81ecf1a"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -1102,7 +1087,6 @@
     "k8s.io/client-go/discovery/fake",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",
-    "k8s.io/client-go/listers/core/v1",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/cache",
@@ -1129,7 +1113,6 @@
     "knative.dev/pkg/tracker",
     "knative.dev/pkg/version",
     "knative.dev/pkg/webhook",
-    "knative.dev/sample-controller/pkg/client/informers/externalversions/internalinterfaces",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
