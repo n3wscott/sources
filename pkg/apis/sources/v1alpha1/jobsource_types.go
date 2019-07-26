@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/pkg/apis"
@@ -35,7 +36,6 @@ type JobSource struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec holds the desired state of the JobSource (from the client).
-	// +optional
 	Spec JobSourceSpec `json:"spec,omitempty"`
 
 	// Status communicates the observed state of the JobSource (from the controller).
@@ -50,22 +50,41 @@ var _ kmeta.OwnerRefable = (*JobSource)(nil)
 
 // JobSourceSpec holds the desired state of the JobSource (from the client).
 type JobSourceSpec struct {
-	// TODO(spencer-p)
+	// Template describes the pods that will be created.
+	Template *corev1.PodTemplateSpec `json:"template,omitempty"`
+
+	// Sink is a reference to an object that will resolve to URI to send
+	// events to.
+	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+
+	// OutputFormat describes the output format the source should send
+	// events in.
+	// +optional
+	OutputFormat OutputFormatType `json:"outputformat,omitempty"`
 }
 
 const (
-	// JobSourceConditionReady is set when the revision is starting to materialize
-	// runtime resources, and becomes true when those resources are ready.
-	JobSourceConditionReady = apis.ConditionReady
+	// JobSourceConditionSucceeded is set when the revision starts to
+	// materialize runtime resources and becomes true when the Job finishes
+	// successfully.
+	JobSourceConditionSucceeded = apis.ConditionSucceeded
 
-	// TODO(spencer-p) We need more statuses and may not need ConditionReady at all.
+	// JobSourceConditionSinkProvided becomes true when the Source is
+	// configured with a sink.
+	JobSourceConditionSinkProvided apis.ConditionType = "SinkProvided"
+
+	// JobSourceConditionJobSucceeded becomes true when the underlying Job
+	// succeeds.
+	JobSourceConditionJobSucceeded apis.ConditionType = "JobSucceeded"
 )
 
 // JobSourceStatus communicates the observed state of the JobSource (from the controller).
 type JobSourceStatus struct {
 	duckv1beta1.Status `json:",inline"`
 
-	// TODO(spencer-p)
+	// SinkURI is the current sink URI configured for the JobSource.
+	// +optional
+	SinkURI string `json:"sinkUri,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

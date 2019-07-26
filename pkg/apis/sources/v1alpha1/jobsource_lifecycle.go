@@ -31,15 +31,3 @@ func (js *JobSource) GetGroupVersionKind() schema.GroupVersionKind {
 func (jss *JobSourceStatus) InitializeConditions() {
 	condSet.Manage(jss).InitializeConditions()
 }
-
-// TODO(spencer-p) We might not need ConditionReady
-func (jss *JobSourceStatus) MarkServiceUnavailable(name string) {
-	condSet.Manage(jss).MarkFalse(
-		JobSourceConditionReady,
-		"ServiceUnavailable",
-		"Service %q wasn't found.", name)
-}
-
-func (jss *JobSourceStatus) MarkServiceAvailable() {
-	condSet.Manage(jss).MarkTrue(JobSourceConditionReady)
-}
