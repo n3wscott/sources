@@ -9,5 +9,3 @@ spec:
       value: master
     - name: url
       value: https://github.com/n3wscott/sources
-    - name: package
-      value: github.com/n3wscott/sources
