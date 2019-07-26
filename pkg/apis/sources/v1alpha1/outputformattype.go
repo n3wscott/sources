@@ -25,7 +25,8 @@ import (
 type OutputFormatType string
 
 const (
-	// Only structured and binary output formats are required to be supported.
+	// Sources are required to support structured and binary output formats.
+	// Any other format type is invalid.
 	OutputFormatStructured OutputFormatType = "structured"
 	OutputFormatBinary                      = "binary"
 )
