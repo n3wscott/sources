@@ -3,19 +3,28 @@ kind: Pipeline
 metadata:
   name: n3wscott-sources-pipeline
 spec:
+  params:
+  - name: package
+    description: package to opperate on
   resources:
-    - name: source-repo
-      type: git
+  - name: source
+    type: git
   tasks:
-    - name: lint
-      taskRef:
-        name: golangci-lint
-      params:
-        - name: package
-          value: ${inputs.resources.source-repo.package}
-    - name: build
-      taskRef:
-        name: golang-build
-    - name: test
-      taskRef:
-        name: golang-test
+  - name: lint
+    taskRef:
+      name: golangci-lint
+    params:
+    - name: package
+      value: ${params.package}
+  - name: build
+    taskRef:
+      name: golang-build
+    params:
+    - name: package
+      value: ${params.package}
+  - name: test
+    taskRef:
+      name: golang-test
+    params:
+    - name: package
+      value: ${params.package}

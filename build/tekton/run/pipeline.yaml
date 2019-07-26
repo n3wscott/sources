@@ -6,6 +6,9 @@ spec:
   pipelineRef:
     name: n3wscott-sources-pipeline
   resources:
-    - name: source-repo
-      resourceRef:
-        name: n3wscott-sources-git
+  - name: source
+    resourceRef:
+      name: n3wscott-sources-git
+  params:
+  - name: package
+    value: github.com/n3wscott/sources
