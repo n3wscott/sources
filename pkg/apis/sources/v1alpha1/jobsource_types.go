@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package v1alpha1
 
 import (
@@ -58,9 +57,9 @@ type JobSourceSpec struct {
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 
 	// OutputFormat describes the output format the source should send
-	// events in.
+	// events in. All formats are over HTTP. If omitted, defaults to binary.
 	// +optional
-	OutputFormat OutputFormatType `json:"outputformat,omitempty"`
+	OutputFormat OutputFormatType `json:"outputFormat,omitempty"`
 }
 
 const (

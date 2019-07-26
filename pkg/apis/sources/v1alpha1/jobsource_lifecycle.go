@@ -21,13 +21,80 @@ import (
 	"knative.dev/pkg/apis"
 )
 
-var condSet = apis.NewLivingConditionSet()
+var condSet = apis.NewBatchConditionSet(
+	JobSourceConditionSinkProvided,
+	JobSourceConditionJobSucceeded,
+)
 
 // GetGroupVersionKind implements kmeta.OwnerRefable
 func (js *JobSource) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("JobSource")
 }
 
-func (jss *JobSourceStatus) InitializeConditions() {
-	condSet.Manage(jss).InitializeConditions()
+func (s *JobSourceStatus) InitializeConditions() {
+	condSet.Manage(s).InitializeConditions()
+}
+
+// Succeeded returns true if the JobSource has succeeded.
+func (s *JobSourceStatus) Succeeded() bool {
+	// This condition set should use apis.ConditionSucceeded (JobSourceConditionSucceeded).
+	return condSet.Manage(s).IsHappy()
+}
+
+// MarkSink sets the conditions that the source has received a sink URI.
+func (s *JobSourceStatus) MarkSink(uri string) {
+	if s.IsRunning() {
+		// If the sink changes while the job is already running, we are choosing to let the job finish
+		// using the outdated sink.
+		// TODO(spencer-p) Log this somewhere.
+		// TODO(spencer-p,n3wscott) This is opinionated, discuss further. Other options include:
+		//  - Proxying the sink and resolving it only when the cloud event is generated
+		//  - Killing the job and restarting it
+		return
+	}
+
+	s.SinkURI = uri
+	if len(uri) > 0 {
+		condSet.Manage(s).MarkTrue(JobSourceConditionSinkProvided)
+	} else {
+		condSet.Manage(s).MarkUnknown(JobSourceConditionSinkProvided, "SinkEmpty", "Sink resolved to empty URI")
+	}
+}
+
+// MarkNoSink sets the condition that the JobSource does not have a sink configured.
+func (s *JobSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
+	condSet.Manage(s).MarkFalse(JobSourceConditionSinkProvided, reason, messageFormat, messageA...)
+}
+
+// JobSucceeded returns true if the underlying Job has succeeded.
+func (s *JobSourceStatus) JobSucceeded() bool {
+	return condSet.Manage(s).GetCondition(JobSourceConditionJobSucceeded).IsTrue()
+}
+
+// IsRunning returns true if the job is currently running.
+func (s *JobSourceStatus) IsRunning() bool {
+	jobsucceeded := condSet.Manage(s).GetCondition(JobSourceConditionJobSucceeded)
+	if !jobsucceeded.IsUnknown() {
+		// The job's success is known iff if it finished running.
+		return false
+	}
+
+	// If the success is unknown because it is "Active", then the job is running.
+	// TODO(spencer-p) Better way to do this?
+	return jobsucceeded.Reason == "Active"
+}
+
+// MarkJobSucceeded sets the condition that the underlying Job succeeded.
+func (s *JobSourceStatus) MarkJobSucceeded() {
+	condSet.Manage(s).MarkTrue(JobSourceConditionJobSucceeded)
+}
+
+// MarkJobRunning sets the condition of the underlying Job's success to unknown.
+func (s *JobSourceStatus) MarkJobRunning(messageFormat string, messageA ...interface{}) {
+	condSet.Manage(s).MarkUnknown(JobSourceConditionJobSucceeded, "Active", messageFormat, messageA...)
+}
+
+// MarkJobFailed sets the condition that the underlying Job failed.
+func (s *JobSourceStatus) MarkJobFailed(reason, messageFormat string, messageA ...interface{}) {
+	condSet.Manage(s).MarkFalse(JobSourceConditionJobSucceeded, reason, messageFormat, messageA...)
 }
