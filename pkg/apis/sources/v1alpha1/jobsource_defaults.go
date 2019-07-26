@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package v1alpha1
 
 import (
@@ -23,5 +22,7 @@ import (
 // SetDefaults implements apis.Defaultable
 func (js *JobSource) SetDefaults(ctx context.Context) {
 	// TODO(spencer-p) Document this default
-	js.Spec.OutputFormat = OutputFormatBinary
+	if js.Spec.OutputFormat == "" {
+		js.Spec.OutputFormat = OutputFormatBinary
+	}
 }

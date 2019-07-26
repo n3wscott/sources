@@ -33,12 +33,10 @@ func (jss *JobSourceSpec) Validate(ctx context.Context) *apis.FieldError {
 	var errs *apis.FieldError
 
 	// OutputFormat must be one of the two types
-	if jss.OutputFormat.Valid() == false {
-		errs = errs.Also(apis.ErrInvalidValue(jss.OutputFormat, "outputFormat"))
-	}
+	errs = errs.Also(jss.OutputFormat.Validate(ctx))
 
 	// The Sink ObjectReference must be okay
-	errs = errs.Also(validateRef(jss.Sink))
+	errs = errs.Also(validateRef(jss.Sink).ViaField("sink"))
 
 	return errs
 }

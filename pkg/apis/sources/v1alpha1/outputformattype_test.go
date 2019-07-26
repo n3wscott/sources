@@ -15,21 +15,29 @@ limitations under the License.
 */
 package v1alpha1
 
-// OutputFormatType describes the data format that a Source is expected to output when it sends Cloud Events.
-type OutputFormatType string
-
-const (
-	// Only structured and binary output formats are required to be supported.
-	OutputFormatStructured OutputFormatType = "structured"
-	OutputFormatBinary                      = "binary"
+import (
+	"context"
+	"testing"
 )
 
-func (o OutputFormatType) Valid() bool {
-	switch o {
-	case OutputFormatStructured, OutputFormatBinary:
-		return true
-	default:
-		// Not supported.
-		return false
+func TestOutputFormatTypeValid(t *testing.T) {
+	tests := []struct {
+		o    OutputFormatType
+		want bool
+	}{
+		{"structured", true},
+		{"binary", true},
+		{"trinary", false},
+		{"quantum", false},
+		{"http", false}, // all events are over HTTP
+		{"messenger_pigeon", false},
+	}
+
+	for _, test := range tests {
+		t.Run(string(test.o), func(t *testing.T) {
+			if got := test.o.Validate(context.Background()) == nil; got != test.want {
+				t.Errorf("OutputFormatType %s got %t for Valid(), wanted %t", test.o, got, test.want)
+			}
+		})
 	}
 }

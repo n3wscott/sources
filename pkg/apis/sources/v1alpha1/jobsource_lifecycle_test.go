@@ -24,98 +24,87 @@ func TestJobSourceSucceeded(t *testing.T) {
 		name string
 		body func(s *JobSourceStatus)
 		want bool
-	}{
-		{
-			name: "initialized",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-			},
-			want: false,
+	}{{
+		name: "initialized",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
 		},
-		{
-			name: "mark job succeeded",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-				s.MarkJobSucceeded()
-			},
-			want: false,
+		want: false,
+	}, {
+		name: "mark job succeeded",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
+			s.MarkJobSucceeded()
 		},
-		{
-			name: "mark job failed",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-				s.MarkJobFailed("MarkJobFailed", "")
-			},
-			want: false,
+		want: false,
+	}, {
+		name: "mark job failed",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
+			s.MarkJobFailed("MarkJobFailed", "")
 		},
-		{
-			name: "mark sink",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-				s.MarkSink("example.com")
-			},
-			want: false,
+		want: false,
+	}, {
+		name: "mark sink",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
+			s.MarkSink("example.com")
 		},
-		{
-			name: "mark sink and succeed",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-				s.MarkSink("example.com")
-				s.MarkJobSucceeded()
-			},
-			want: true,
+		want: false,
+	}, {
+		name: "mark sink and succeed",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
+			s.MarkSink("example.com")
+			s.MarkJobSucceeded()
 		},
-		{
-			name: "mark sink and running",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-				s.MarkSink("example.com")
-				s.MarkJobRunning("")
-			},
-			want: false,
+		want: true,
+	}, {
+		name: "mark sink and running",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
+			s.MarkSink("example.com")
+			s.MarkJobRunning("")
 		},
-		{
-			name: "mark sink, running and mark sink again",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-				s.MarkSink("example.com")
-				s.MarkJobRunning("")
-				s.MarkSink("example2.com")
-			},
-			want: false,
+		want: false,
+	}, {
+		name: "mark sink, running and mark sink again",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
+			s.MarkSink("example.com")
+			s.MarkJobRunning("")
+			s.MarkSink("example2.com")
 		},
-		{
-			name: "mark sink, running and job succeeded",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-				s.MarkSink("example.com")
-				s.MarkJobRunning("")
-				s.MarkJobSucceeded()
-			},
-			want: true,
+		want: false,
+	}, {
+		name: "mark sink, running and job succeeded",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
+			s.MarkSink("example.com")
+			s.MarkJobRunning("")
+			s.MarkJobSucceeded()
 		},
-		{
-			name: "mark sink, running and job failed",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-				s.MarkSink("example.com")
-				s.MarkJobRunning("")
-				s.MarkJobFailed("MarkJobFailed", "")
-			},
-			want: false,
+		want: true,
+	}, {
+		name: "mark sink, running and job failed",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
+			s.MarkSink("example.com")
+			s.MarkJobRunning("")
+			s.MarkJobFailed("MarkJobFailed", "")
 		},
-		{
-			name: "mark running, sink, job succeeded",
-			body: func(s *JobSourceStatus) {
-				s.InitializeConditions()
-				// This exchange should not be possible. Job should not start running until there is a sink.
-				s.MarkJobRunning("")
-				s.MarkSink("example.com")
-				s.MarkJobSucceeded()
-			},
-			want: false,
+		want: false,
+	}, {
+		name: "mark running, sink, job succeeded",
+		body: func(s *JobSourceStatus) {
+			s.InitializeConditions()
+			// This exchange should not be possible. Job should not start running until there is a sink.
+			s.MarkJobRunning("")
+			s.MarkSink("example.com")
+			s.MarkJobSucceeded()
 		},
-	}
+		want: false,
+	}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

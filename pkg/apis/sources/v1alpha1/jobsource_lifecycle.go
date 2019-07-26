@@ -21,6 +21,10 @@ import (
 	"knative.dev/pkg/apis"
 )
 
+const (
+	jobRunningReason = "Running"
+)
+
 var condSet = apis.NewBatchConditionSet(
 	JobSourceConditionSinkProvided,
 	JobSourceConditionJobSucceeded,
@@ -43,7 +47,7 @@ func (s *JobSourceStatus) Succeeded() bool {
 
 // MarkSink sets the conditions that the source has received a sink URI.
 func (s *JobSourceStatus) MarkSink(uri string) {
-	if s.IsRunning() {
+	if s.IsJobRunning() {
 		// If the sink changes while the job is already running, we are choosing to let the job finish
 		// using the outdated sink.
 		// TODO(spencer-p) Log this somewhere.
@@ -71,17 +75,17 @@ func (s *JobSourceStatus) JobSucceeded() bool {
 	return condSet.Manage(s).GetCondition(JobSourceConditionJobSucceeded).IsTrue()
 }
 
-// IsRunning returns true if the job is currently running.
-func (s *JobSourceStatus) IsRunning() bool {
+// IsJobRunning returns true if the job is currently running.
+func (s *JobSourceStatus) IsJobRunning() bool {
 	jobsucceeded := condSet.Manage(s).GetCondition(JobSourceConditionJobSucceeded)
 	if !jobsucceeded.IsUnknown() {
 		// The job's success is known iff if it finished running.
 		return false
 	}
 
-	// If the success is unknown because it is "Active", then the job is running.
+	// If the success is unknown because it is jobRunningReason, then the job is running.
 	// TODO(spencer-p) Better way to do this?
-	return jobsucceeded.Reason == "Active"
+	return jobsucceeded.Reason == jobRunningReason
 }
 
 // MarkJobSucceeded sets the condition that the underlying Job succeeded.
@@ -91,7 +95,7 @@ func (s *JobSourceStatus) MarkJobSucceeded() {
 
 // MarkJobRunning sets the condition of the underlying Job's success to unknown.
 func (s *JobSourceStatus) MarkJobRunning(messageFormat string, messageA ...interface{}) {
-	condSet.Manage(s).MarkUnknown(JobSourceConditionJobSucceeded, "Active", messageFormat, messageA...)
+	condSet.Manage(s).MarkUnknown(JobSourceConditionJobSucceeded, jobRunningReason, messageFormat, messageA...)
 }
 
 // MarkJobFailed sets the condition that the underlying Job failed.
