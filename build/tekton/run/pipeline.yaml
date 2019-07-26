@@ -1,0 +1,11 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  generateName: n3wscott-sources-pipeline-
+spec:
+  pipelineRef:
+    name: n3wscott-sources-pipeline
+  resources:
+    - name: source-repo
+      resourceRef:
+        name: n3wscott-sources-git

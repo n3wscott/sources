@@ -1,0 +1,20 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  generateName: n3wscott-sources-lint-
+spec:
+  taskRef:
+    name: golangci-lint
+  inputs:
+    resources:
+    - name: source
+      resourceSpec:
+        type: git
+        params:
+        - name: url
+          value: https://github.com/n3wscott/sources
+    params:
+    - name: package
+      value: github.com/n3wscott/sources
+    - name: flags
+      value: --verbose

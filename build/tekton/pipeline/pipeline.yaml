@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: n3wscott-sources-pipeline
+spec:
+  resources:
+    - name: source-repo
+      type: git
+  tasks:
+    - name: lint
+      taskRef:
+        name: golangci-lint
+      params:
+        - name: package
+          value: ${inputs.resources.source-repo.package}
+    - name: build
+      taskRef:
+        name: golang-build
+    - name: test
+      taskRef:
+        name: golang-test
