@@ -16,15 +16,27 @@ spec:
     params:
     - name: package
       value: ${params.package}
+    resources:
+      inputs:
+      - name: source
+        resource: source
   - name: build
     taskRef:
       name: golang-build
     params:
     - name: package
       value: ${params.package}
+    resources:
+      inputs:
+      - name: source
+        resource: source
   - name: test
     taskRef:
       name: golang-test
     params:
     - name: package
       value: ${params.package}
+    resources:
+      inputs:
+      - name: source
+        resource: source
