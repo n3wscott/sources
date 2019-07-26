@@ -22,5 +22,6 @@ import (
 
 // SetDefaults implements apis.Defaultable
 func (js *JobSource) SetDefaults(ctx context.Context) {
-	// TODO(spencer-p) output type should have a default
+	// TODO(spencer-p) Document this default
+	js.Spec.OutputFormat = OutputFormatBinary
 }
