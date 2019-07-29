@@ -13,11 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package v1alpha1
 
 import (
 	"context"
+
+	corev1 "k8s.io/api/core/v1"
 
 	"knative.dev/pkg/apis"
 )
@@ -29,6 +30,34 @@ func (js *JobSource) Validate(ctx context.Context) *apis.FieldError {
 
 // Validate implements apis.Validatable
 func (jss *JobSourceSpec) Validate(ctx context.Context) *apis.FieldError {
-	// TODO(spencer-p)
-	return nil
+	var errs *apis.FieldError
+
+	// OutputFormat must be one of the two types
+	errs = errs.Also(jss.OutputFormat.Validate(ctx))
+
+	// The Sink ObjectReference must be okay
+	errs = errs.Also(validateRef(jss.Sink).ViaField("sink"))
+
+	return errs
+}
+
+func validateRef(ref *corev1.ObjectReference) *apis.FieldError {
+	// nil check.
+	if ref == nil {
+		return apis.ErrMissingField(apis.CurrentField)
+	}
+	// Check the object.
+	var errs *apis.FieldError
+	// Required Fields
+	if ref.Name == "" {
+		errs = errs.Also(apis.ErrMissingField("name"))
+	}
+	if ref.APIVersion == "" {
+		errs = errs.Also(apis.ErrMissingField("apiVersion"))
+	}
+	if ref.Kind == "" {
+		errs = errs.Also(apis.ErrMissingField("kind"))
+	}
+
+	return errs
 }
