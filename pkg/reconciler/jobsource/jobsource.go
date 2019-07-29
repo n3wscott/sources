@@ -18,24 +18,44 @@ package jobsource
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"net/url"
 	"reflect"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
-	clientset "github.com/n3wscott/sources/pkg/client/clientset/versioned"
-	listers "github.com/n3wscott/sources/pkg/client/listers/sources/v1alpha1"
-	"go.uber.org/zap"
+	"github.com/n3wscott/sources/pkg/reconciler/jobsource/resources"
+
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+
+	"github.com/knative/eventing/pkg/duck"
+	clientset "github.com/n3wscott/sources/pkg/client/clientset/versioned"
+	listers "github.com/n3wscott/sources/pkg/client/listers/sources/v1alpha1"
+	"go.uber.org/zap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/tracker"
 )
 
+var (
+	errSinkInvalid = errors.New("Bad sink")
+	errSinkMissing = errors.New("Sink missing from spec")
+)
+
 // Reconciler implements controller.Reconciler for JobSource resources.
 type Reconciler struct {
+	// KubeClientSet allows us to talk to k8s.
+	KubeClientSet kubernetes.Interface
+
 	// Client is used to write back status updates.
 	Client clientset.Interface
 
@@ -50,6 +70,9 @@ type Reconciler struct {
 	// Recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
 	Recorder record.EventRecorder
+
+	// Common logic for reconciling sinks
+	sinkReconciler *duck.SinkReconciler
 }
 
 // Check that our Reconciler implements controller.Reconciler
@@ -103,6 +126,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 }
 
 func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) error {
+	logger := logging.FromContext(ctx)
+
 	if js.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
 		// When a controller needs finalizer handling, it would go here.
@@ -110,10 +135,107 @@ func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) erro
 	}
 	js.Status.InitializeConditions()
 
-	// TODO(spencer-p) implement this method
+	// Having a sink is a prereq for starting the job, so we reconcile the sink first
+	if err := r.reconcileSink(ctx, js); err == errSinkInvalid {
+		// No real error, but sink was bad
+		logger.Warn("Sink resolved to a bad URI")
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	if err := r.reconcileJob(ctx, js); err != nil {
+		return err
+	}
 
 	js.Status.ObservedGeneration = js.Generation
 	return nil
+}
+
+// reconcileJob enforces the creation and lifecycle of the job. It assumes that the sink exists and is valid.
+func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) error {
+	job, err := r.getJob(ctx, js, labels.SelectorFromSet(resources.Labels(js)))
+
+	if apierrs.IsNotFound(err) {
+		// No job, must create it
+		job = resources.MakeJob(resources.Arguments{
+			Owner:     js,
+			Namespace: js.Namespace,
+			Template:  js.Spec.Template,
+			SinkURI:   js.Status.SinkURI,
+		})
+
+		job, err := r.KubeClientSet.BatchV1().Jobs(js.Namespace).Create(job)
+		if err != nil || job == nil {
+			msg := "Failed to make Job."
+			if err != nil {
+				msg = msg + " " + err.Error()
+			}
+			js.Status.MarkJobFailed("FailedCreate", msg)
+			return fmt.Errorf("failed to create Job: %s", err)
+		}
+
+		js.Status.MarkJobRunning("Created Job %q.", job.Name)
+		return nil
+	} else if err != nil {
+		js.Status.MarkJobFailed("FailedGet", err.Error())
+		return fmt.Errorf("failed to get Job: %s", err)
+	}
+
+	// Job exists, check if it is done
+	if cond := getJobCompletedCondition(job); cond != nil && jobConditionSucceeded(cond) {
+		js.Status.MarkJobSucceeded()
+	} else if cond != nil && jobConditionFailed(cond) {
+		js.Status.MarkJobFailed(cond.Reason, cond.Message)
+	}
+
+	return nil
+}
+
+// reconcileSink attempts to reconcile the sink object reference to a URI and set the sink in the JobSourceStatus.
+func (r *Reconciler) reconcileSink(ctx context.Context, js *v1alpha1.JobSource) error {
+	if js.Spec.Sink == nil {
+		js.Status.MarkNoSink("Missing", "Sink missing from spec")
+		return errSinkMissing
+	}
+
+	ref := js.Spec.Sink
+	if ref.Namespace == "" {
+		ref.Namespace = js.Namespace
+	}
+
+	desc := fmt.Sprintf("%s/%s, %s", js.Namespace, js.Name, js.GroupVersionKind().String())
+	uri, err := r.sinkReconciler.GetSinkURI(ref, js, desc)
+	if err != nil {
+		js.Status.MarkNoSink("NotFound", "Could not get sink URI from %s/%s: %v", ref.Namespace, ref.Name, err)
+		return err
+	}
+
+	if parsedURI, err := url.Parse(uri); err != nil || !isGoodURL(parsedURI) {
+		js.Status.MarkNoSink("InvalidValue", "SinkURI resolved to invalid sink: %s", uri)
+		return errSinkInvalid
+	}
+
+	js.Status.MarkSink(uri)
+
+	return nil
+}
+
+func (r *Reconciler) getJob(ctx context.Context, owner metav1.Object, ls labels.Selector) (*batchv1.Job, error) {
+	list, err := r.KubeClientSet.BatchV1().Jobs(owner.GetNamespace()).List(metav1.ListOptions{
+		LabelSelector: ls.String(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range list.Items {
+		if metav1.IsControlledBy(&list.Items[i], owner) {
+			return &list.Items[i], nil
+		}
+	}
+
+	return nil, apierrs.NewNotFound(schema.GroupResource{}, "")
 }
 
 // Update the Status of the resource.  Caller is responsible for checking
@@ -131,4 +253,34 @@ func (r *Reconciler) updateStatus(desired *v1alpha1.JobSource) (*v1alpha1.JobSou
 	existing := actual.DeepCopy()
 	existing.Status = desired.Status
 	return r.Client.SourcesV1alpha1().JobSources(desired.Namespace).UpdateStatus(existing)
+}
+
+// isGoodURL checks that a URL has the bare minimum amount of information to route properly.
+func isGoodURL(u *url.URL) bool {
+	// Scheme and Host should be enough. Path is allowed to be blank.
+	// ("https://example.com" parses to a blank path)
+	return u.Scheme != "" && u.Host != ""
+}
+
+// getJobCompletedCondition finds a JobCondition of the Job that has information about its completedness.
+func getJobCompletedCondition(job *batchv1.Job) *batchv1.JobCondition {
+	for _, c := range job.Status.Conditions {
+		if c.Type == batchv1.JobFailed && c.Status == corev1.ConditionTrue {
+			return &c
+		}
+		if c.Type == batchv1.JobComplete && c.Status == corev1.ConditionTrue {
+			return &c
+		}
+	}
+	return nil
+}
+
+// jobConditionSucceeded returns true if the given JobCondition marks its job as succeeded.
+func jobConditionSucceeded(c *batchv1.JobCondition) bool {
+	return c.Type == batchv1.JobComplete && c.Status == corev1.ConditionTrue
+}
+
+// jobConditionFailed returns true if the given JobCondition marks its job as failed.
+func jobConditionFailed(c *batchv1.JobCondition) bool {
+	return c.Type == batchv1.JobFailed && c.Status == corev1.ConditionTrue
 }

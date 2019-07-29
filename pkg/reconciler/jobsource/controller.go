@@ -19,11 +19,14 @@ package jobsource
 import (
 	"context"
 
+	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	sourcesclient "github.com/n3wscott/sources/pkg/client/injection/client"
 	jsinformer "github.com/n3wscott/sources/pkg/client/injection/informers/sources/v1alpha1/jobsource"
+	jobinformer "knative.dev/pkg/injection/informers/kubeinformers/batchv1/job"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -43,6 +46,7 @@ func NewController(
 	logger := logging.FromContext(ctx)
 
 	jsInformer := jsinformer.Get(ctx)
+	jobInformer := jobinformer.Get(ctx)
 
 	c := &Reconciler{
 		Client: sourcesclient.Get(ctx),
@@ -55,6 +59,11 @@ func NewController(
 	logger.Info("Setting up event handlers")
 
 	jsInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+
+	jobInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("JobSource")),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
 
 	c.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	return impl
