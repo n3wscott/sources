@@ -16,13 +16,27 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	"testing"
 )
 
-// SetDefaults implements apis.Defaultable
-func (js *JobSource) SetDefaults(ctx context.Context) {
-	// TODO(spencer-p) Document this default
-	if js.Spec.OutputFormat == "" {
-		js.Spec.OutputFormat = OutputFormatBinary
+func TestOutputFormatTypeValid(t *testing.T) {
+	tests := []struct {
+		o    OutputFormatType
+		want bool
+	}{
+		{"structured", true},
+		{"binary", true},
+		{"trinary", false},
+		{"quantum", false},
+		{"http", false}, // all events are over HTTP
+		{"messenger_pigeon", false},
+	}
+
+	for _, test := range tests {
+		t.Run(string(test.o), func(t *testing.T) {
+			if got := test.o.Valid(); got != test.want {
+				t.Errorf("OutputFormatType %s got %t for Valid(), wanted %t", test.o, got, test.want)
+			}
+		})
 	}
 }

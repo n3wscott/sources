@@ -15,14 +15,21 @@ limitations under the License.
 */
 package v1alpha1
 
-import (
-	"context"
+// OutputFormatType describes the data format that a Source is expected to output when it sends Cloud Events.
+type OutputFormatType string
+
+const (
+	// Only structured and binary output formats are required to be supported.
+	OutputFormatStructured OutputFormatType = "structured"
+	OutputFormatBinary                      = "binary"
 )
 
-// SetDefaults implements apis.Defaultable
-func (js *JobSource) SetDefaults(ctx context.Context) {
-	// TODO(spencer-p) Document this default
-	if js.Spec.OutputFormat == "" {
-		js.Spec.OutputFormat = OutputFormatBinary
+func (o OutputFormatType) Valid() bool {
+	switch o {
+	case OutputFormatStructured, OutputFormatBinary:
+		return true
+	default:
+		// Not supported.
+		return false
 	}
 }
