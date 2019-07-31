@@ -2,10 +2,16 @@
 
 
 [[projects]]
-  digest = "1:6d2aa4e45a44dce28066e544dcac5b7a5b41c074c7604d9f3dfe29ad57ef830f"
+  digest = "1:3d00c0a59de36422892e874cb5d10023d048c03940ae085944f9d590c58f6e98"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
+    "firestore",
+    "firestore/apiv1",
+    "internal/btree",
+    "internal/fields",
+    "internal/trace",
+    "internal/version",
     "monitoring/apiv3",
     "trace/apiv2",
   ]
@@ -701,9 +707,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9b9245bd124d95af7072487cd1e5861174b859ebc31cbe9fbab3b88456701485"
+  digest = "1:043115444794c0475d5155841acc22e22a5659de2f903a9bb21ffb945d2dcfcf"
   name = "google.golang.org/api"
   packages = [
+    "googleapi",
+    "googleapi/internal/uritemplates",
     "googleapi/transport",
     "internal",
     "iterator",
@@ -739,7 +747,7 @@
   version = "v1.6.1"
 
 [[projects]]
-  digest = "1:def98947a836b93bfa0a168c85631b13df2541db0bdf28f2034b6e914638aee1"
+  digest = "1:6f9e2a9e09e3b4fb817f99d9788f2128d7647412b0e688d1e6b38a423a4e97ab"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api",
@@ -749,8 +757,11 @@
     "googleapis/api/metric",
     "googleapis/api/monitoredres",
     "googleapis/devtools/cloudtrace/v2",
+    "googleapis/firestore/v1",
     "googleapis/monitoring/v3",
+    "googleapis/rpc/code",
     "googleapis/rpc/status",
+    "googleapis/type/latlng",
     "protobuf/field_mask",
   ]
   pruneopts = "NUT"
@@ -1195,6 +1206,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "cloud.google.com/go/firestore",
     "github.com/cloudevents/sdk-go",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
     "github.com/kelseyhightower/envconfig",
@@ -1237,6 +1249,7 @@
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
+    "knative.dev/pkg/injection/clients/kubeclient",
     "knative.dev/pkg/injection/informers/kubeinformers/batchv1/job",
     "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",

@@ -10,6 +10,12 @@ spec:
       containers:
       - name: event-replay
         image: github.com/n3wscott/sources/cmd/demos/event-replay
+        env:
+          - name: GOOGLE_APPLICATION_CREDS_JSON
+            valueFrom:
+              secretKeyRef:
+                name: db-creds
+                key: db-svc-acct.json
   sink:
     apiVersion: serving.knative.dev/v1alpha1
     kind: Service
