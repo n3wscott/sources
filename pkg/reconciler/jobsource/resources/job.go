@@ -54,7 +54,7 @@ func MakeJob(args Arguments) *batchv1.Job {
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(args.Owner)},
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: ptr.Int32(0),
+			BackoffLimit: ptr.Int32(5),
 			Parallelism:  ptr.Int32(1),
 			Completions:  ptr.Int32(1),
 			Template:     *podTemplate,
