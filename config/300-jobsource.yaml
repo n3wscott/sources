@@ -34,4 +34,10 @@ spec:
   scope: Namespaced
   subresources:
     status: {}
-  # TODO(spencer-p) additionalPrinterColumns
+  additionalPrinterColumns:
+  - name: Succeeded
+    type: string
+    JSONPath: ".status.conditions[?(@.type=='Succeeded')].status"
+  - name: Reason
+    type: string
+    JSONPath: ".status.conditions[?(@.type=='Succeeded')].reason"
