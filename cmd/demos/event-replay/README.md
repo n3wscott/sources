@@ -59,7 +59,7 @@ Open `event-replay.yaml` and make sure all the fields are correct:
 
 Finally, create the event replay JobSource.
 ```bash
-ko create -f event-replay
+ko create -f event-replay.yaml
 ```
 
 Monitor its status with `kubectl get jobsources`.
