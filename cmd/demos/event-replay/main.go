@@ -20,22 +20,25 @@ const (
 	replaySpeed = time.Second / 5
 )
 
-type envConf struct {
+type envConfig struct {
 	// Source options
 	Sink         string                    `envconfig:"K_SINK" required:"true"`
 	OutputFormat v1alpha1.OutputFormatType `envconfig:"K_OUTPUT_FORMAT" required:"true"`
 
 	// Database credentials
 	ServiceAccountCreds []byte `envconfig:"GOOGLE_APPLICATION_CREDS_JSON" required:"true"`
+
+	// Firestore collection to read from
+	Collection string `envconfig:"FROM_COLLECTION" required:"true"`
 }
 
-func replayEvents(dbclient *firestore.Client, ceclient cloudevents.Client) error {
+func (env *envConfig) replayEvents(dbclient *firestore.Client, ceclient cloudevents.Client) error {
 
 	ticker := time.NewTicker(replaySpeed)
 	defer ticker.Stop()
 
 	// Iterate through each document and publish it
-	iter := dbclient.Collection("purchases").Documents(context.Background())
+	iter := dbclient.Collection(env.Collection).Documents(context.Background())
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -49,7 +52,7 @@ func replayEvents(dbclient *firestore.Client, ceclient cloudevents.Client) error
 		event := cloudevents.Event{
 			Context: cloudevents.EventContextV02{
 				Type:   "dev.knative.eventing.n3wscott.sources.demos.event-replay",
-				Source: *cloudevents.ParseURLRef("http://dev.tryransom.com/"),
+				Source: *cloudevents.ParseURLRef("http://example.com/"),
 			}.AsV02(),
 			Data: doc.Data(),
 		}
@@ -65,7 +68,7 @@ func replayEvents(dbclient *firestore.Client, ceclient cloudevents.Client) error
 }
 
 func main() {
-	var env envConf
+	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
 		log.Fatal("Failed to process env: ", err)
 	}
@@ -80,7 +83,7 @@ func main() {
 		log.Fatal("Could not create firestore client: ", err)
 	}
 
-	if err := replayEvents(dbclient, ceclient); err != nil {
+	if err := env.replayEvents(dbclient, ceclient); err != nil {
 		log.Fatalf("Could not replay events: %v\n", err)
 	}
 
