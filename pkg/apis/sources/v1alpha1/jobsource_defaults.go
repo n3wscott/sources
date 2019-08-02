@@ -17,6 +17,8 @@ package v1alpha1
 
 import (
 	"context"
+
+	"knative.dev/pkg/ptr"
 )
 
 // SetDefaults implements apis.Defaultable
@@ -24,5 +26,11 @@ func (js *JobSource) SetDefaults(ctx context.Context) {
 	// TODO(spencer-p) Document this default
 	if js.Spec.OutputFormat == "" {
 		js.Spec.OutputFormat = OutputFormatBinary
+	}
+
+	// Use the documented default for the embedded JobSpec.
+	// See k8s.io/api/batch/v1.JobSpec.BackoffLimit.
+	if js.Spec.BackoffLimit == nil {
+		js.Spec.BackoffLimit = ptr.Int32(6)
 	}
 }

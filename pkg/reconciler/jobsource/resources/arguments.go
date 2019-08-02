@@ -18,7 +18,7 @@ package resources
 import (
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 
-	corev1 "k8s.io/api/core/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -26,10 +26,11 @@ const (
 	labelKey = "sources.knative.dev/jobsource"
 )
 
+// TODO(spencer-p) This arguments object is heavy; almost everything is already in the JobSource
 type Arguments struct {
 	Owner        kmeta.OwnerRefable
 	Namespace    string
-	Template     *corev1.PodTemplateSpec
+	Spec         *batchv1.JobSpec
 	Annotations  map[string]string
 	Labels       map[string]string
 	SinkURI      string

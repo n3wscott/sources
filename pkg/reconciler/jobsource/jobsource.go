@@ -160,7 +160,7 @@ func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) e
 		job = resources.MakeJob(resources.Arguments{
 			Owner:        js,
 			Namespace:    js.Namespace,
-			Template:     js.Spec.Template,
+			Spec:         &js.Spec.JobSpec,
 			SinkURI:      js.Status.SinkURI,
 			OutputFormat: js.Spec.OutputFormat,
 		})

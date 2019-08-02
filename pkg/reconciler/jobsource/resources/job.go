@@ -21,7 +21,6 @@ import (
 
 	"github.com/knative/eventing/pkg/utils"
 	"knative.dev/pkg/kmeta"
-	"knative.dev/pkg/ptr"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +28,7 @@ import (
 )
 
 func MakeJob(args Arguments) *batchv1.Job {
-	podTemplate := args.Template
+	podTemplate := args.Spec.Template
 	if podTemplate.ObjectMeta.Labels == nil {
 		podTemplate.ObjectMeta.Labels = make(map[string]string)
 	}
@@ -54,12 +53,7 @@ func MakeJob(args Arguments) *batchv1.Job {
 			Labels:          Labels(args.Owner),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(args.Owner)},
 		},
-		Spec: batchv1.JobSpec{
-			BackoffLimit: ptr.Int32(5),
-			Parallelism:  ptr.Int32(1),
-			Completions:  ptr.Int32(1),
-			Template:     *podTemplate,
-		},
+		Spec: *args.Spec,
 	}
 
 	if args.Annotations != nil {
@@ -82,6 +76,5 @@ func MakeJob(args Arguments) *batchv1.Job {
 }
 
 func JobName(owner metav1.Object) string {
-	// TODO(spencer-p) Verify proper use here w/ Adam
 	return utils.GenerateFixedName(owner, owner.GetName()+"-jobsource-")
 }
