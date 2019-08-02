@@ -33,7 +33,6 @@ func MakeJob(args Arguments) *batchv1.Job {
 		podTemplate.ObjectMeta.Labels = make(map[string]string)
 	}
 	podTemplate.ObjectMeta.Labels[labelKey] = args.Owner.GetObjectMeta().GetName()
-	podTemplate.Spec.RestartPolicy = corev1.RestartPolicyNever
 
 	containers := []corev1.Container{}
 	for i, c := range podTemplate.Spec.Containers {

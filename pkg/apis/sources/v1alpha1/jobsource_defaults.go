@@ -19,6 +19,8 @@ import (
 	"context"
 
 	"knative.dev/pkg/ptr"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 // SetDefaults implements apis.Defaultable
@@ -32,5 +34,16 @@ func (js *JobSource) SetDefaults(ctx context.Context) {
 	// See k8s.io/api/batch/v1.JobSpec.BackoffLimit.
 	if js.Spec.BackoffLimit == nil {
 		js.Spec.BackoffLimit = ptr.Int32(6)
+	}
+
+	// Kubernetes defaults this to "Always", which is not valid for jobs.
+	// Set something valid and sane for this job.
+	if tSpec := &js.Spec.Template.Spec; tSpec.RestartPolicy == "" {
+		if *js.Spec.BackoffLimit > 0 {
+
+			tSpec.RestartPolicy = corev1.RestartPolicyOnFailure
+		} else {
+			tSpec.RestartPolicy = corev1.RestartPolicyNever
+		}
 	}
 }
