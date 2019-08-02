@@ -28,7 +28,7 @@ import (
 )
 
 func MakeJob(args Arguments) *batchv1.Job {
-	podTemplate := args.Spec.Template
+	podTemplate := &args.Spec.Template
 	if podTemplate.ObjectMeta.Labels == nil {
 		podTemplate.ObjectMeta.Labels = make(map[string]string)
 	}
