@@ -18,9 +18,10 @@ package resources
 
 import (
 	"fmt"
+
+	"github.com/knative/eventing/pkg/utils"
 	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/ptr"
-	"strings"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -48,7 +49,7 @@ func MakeJob(args Arguments) *batchv1.Job {
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName:    jobName(args.Owner),
+			Name:            JobName(args.Owner.GetObjectMeta()),
 			Namespace:       args.Owner.GetObjectMeta().GetNamespace(),
 			Labels:          Labels(args.Owner),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(args.Owner)},
@@ -80,7 +81,7 @@ func MakeJob(args Arguments) *batchv1.Job {
 	return job
 }
 
-func jobName(owner kmeta.OwnerRefable) string {
-	return strings.ToLower(
-		strings.Join(append([]string{owner.GetObjectMeta().GetName(), "jobsource"}), "-") + "-")
+func JobName(owner metav1.Object) string {
+	// TODO(spencer-p) Verify proper use here w/ Adam
+	return utils.GenerateFixedName(owner, owner.GetName()+"-jobsource-")
 }
