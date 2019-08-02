@@ -157,13 +157,7 @@ func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) e
 
 	if apierrs.IsNotFound(err) {
 		// No job, must create it
-		job = resources.MakeJob(resources.Arguments{
-			Owner:        js,
-			Namespace:    js.Namespace,
-			Spec:         &js.Spec.JobSpec,
-			SinkURI:      js.Status.SinkURI,
-			OutputFormat: js.Spec.OutputFormat,
-		})
+		job = resources.MakeJob(js)
 
 		job, err := r.KubeClientSet.BatchV1().Jobs(js.Namespace).Create(job)
 		if err != nil || job == nil {
