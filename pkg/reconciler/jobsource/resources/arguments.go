@@ -23,8 +23,7 @@ import (
 )
 
 const (
-	// TODO(spencer-p) Double check this
-	labelKey = "n3wscott.com/jobsource"
+	labelKey = "sources.knative.dev/jobsource"
 )
 
 type Arguments struct {

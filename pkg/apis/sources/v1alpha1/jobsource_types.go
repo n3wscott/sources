@@ -39,7 +39,7 @@ type JobSource struct {
 	Spec JobSourceSpec `json:"spec,omitempty"`
 
 	// Status communicates the observed state of the JobSource (from the controller).
-	// +required
+	// +optional
 	Status JobSourceStatus `json:"status,omitempty"`
 }
 
