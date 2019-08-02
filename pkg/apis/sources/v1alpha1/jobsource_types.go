@@ -35,6 +35,7 @@ type JobSource struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Spec holds the desired state of the JobSource (from the client).
+	// +required
 	Spec JobSourceSpec `json:"spec,omitempty"`
 
 	// Status communicates the observed state of the JobSource (from the controller).
@@ -50,10 +51,12 @@ var _ kmeta.OwnerRefable = (*JobSource)(nil)
 // JobSourceSpec holds the desired state of the JobSource (from the client).
 type JobSourceSpec struct {
 	// Template describes the pods that will be created.
+	// +required
 	Template *corev1.PodTemplateSpec `json:"template,omitempty"`
 
 	// Sink is a reference to an object that will resolve to URI to send
 	// events to.
+	// +required
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 
 	// OutputFormat describes the output format the source should send

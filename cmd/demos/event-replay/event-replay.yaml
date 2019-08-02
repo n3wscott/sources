@@ -1,0 +1,34 @@
+apiVersion: sources.knative.dev/v1alpha1
+kind: JobSource
+metadata:
+  name: event-replay
+  labels:
+    controller-tools.k8s.io: "1.0"
+spec:
+  template:
+    spec:
+      containers:
+      - name: event-replay
+        image: github.com/n3wscott/sources/cmd/demos/event-replay
+        env:
+          # FROM_COLLECTION defines the Firestore collection whose documents
+          # will be replayed as events. Change this to the name of your
+          # populated collection (if not using the default).
+          - name: FROM_COLLECTION
+            value: "purchases"
+          # This is the environment variable that will hold the credentials for
+          # Firestore. Make sure to upload your credentials as a secret through
+          # Kubernetes.
+          # Use the following command. "db-creds" and "db-svc-acct.json" can be
+          # changed as long as they match the name and key fields below.
+          # $ kubectl create secret generic db-creds --from-file=path/to/your/creds/db-svc-acct.json
+          - name: GOOGLE_APPLICATION_CREDS_JSON
+            valueFrom:
+              secretKeyRef:
+                name: db-creds
+                key: db-svc-acct.json
+  sink:
+    # Change the kind and name for the sink as desired.
+    apiVersion: serving.knative.dev/v1alpha1
+    kind: Service
+    name: sockeye

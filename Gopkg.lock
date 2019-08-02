@@ -2,10 +2,16 @@
 
 
 [[projects]]
-  digest = "1:6d2aa4e45a44dce28066e544dcac5b7a5b41c074c7604d9f3dfe29ad57ef830f"
+  digest = "1:3d00c0a59de36422892e874cb5d10023d048c03940ae085944f9d590c58f6e98"
   name = "cloud.google.com/go"
   packages = [
     "compute/metadata",
+    "firestore",
+    "firestore/apiv1",
+    "internal/btree",
+    "internal/fields",
+    "internal/trace",
+    "internal/version",
     "monitoring/apiv3",
     "trace/apiv2",
   ]
@@ -30,6 +36,14 @@
   ]
   pruneopts = "NUT"
   revision = "c06c82c832edca4eaf7b0241bd655560a1be0346"
+
+[[projects]]
+  digest = "1:7b5f423f5b0dd3dfa32a19a6183b0ab9129bff371ebf3f9efae32f87e4986d8f"
+  name = "contrib.go.opencensus.io/exporter/zipkin"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "30f9fad5db2c8944c21d223496e2543aeb445d4c"
+  version = "v0.1.1"
 
 [[projects]]
   digest = "1:bce63300ac38138d336256c2cc4b9c3036ec32ee742f4ef6223d6bbabea917df"
@@ -92,6 +106,26 @@
   version = "v0.1.0"
 
 [[projects]]
+  digest = "1:7e05fbb13face7af6bf064ca3a8bbd8c4fcaff81e1d6ce430d8075b001ad5b82"
+  name = "github.com/cloudevents/sdk-go"
+  packages = [
+    ".",
+    "pkg/cloudevents",
+    "pkg/cloudevents/client",
+    "pkg/cloudevents/context",
+    "pkg/cloudevents/datacodec",
+    "pkg/cloudevents/datacodec/json",
+    "pkg/cloudevents/datacodec/xml",
+    "pkg/cloudevents/observability",
+    "pkg/cloudevents/transport",
+    "pkg/cloudevents/transport/http",
+    "pkg/cloudevents/types",
+  ]
+  pruneopts = "NUT"
+  revision = "9c1f61edb2fefdf4de9ccea47af1648e960f47f8"
+  version = "v0.8.0"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -114,6 +148,22 @@
   pruneopts = "NUT"
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:53becd66889185091b58ea3fc49294996f2179fb05a89702f4de7d15e581b509"
+  name = "github.com/go-logr/logr"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "9fb12b3b21c5415d16ac18dc5cd42c1cfdd40c4e"
+  version = "v0.1.0"
+
+[[projects]]
+  digest = "1:340497a512995aa69c0add901d79a2096b3449d35a44a6f1f1115091a9f8c687"
+  name = "github.com/go-logr/zapr"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "03f06a783fbb7dfaf3f629c7825480e43a7105e6"
+  version = "v0.1.1"
 
 [[projects]]
   digest = "1:53151cc4366e3945282d4b783fd41f35222cabbc75601e68d8133648c63498d1"
@@ -177,10 +227,11 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:bf40199583e5143d1472fc34d10d6f4b69d97572142acf343b3e43136da40823"
+  digest = "1:010d46ea3c1e730897e53058d1013a963f3f987675dda87df64f891b945281db"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
+    "cmp/cmpopts",
     "cmp/internal/diff",
     "cmp/internal/flags",
     "cmp/internal/function",
@@ -294,6 +345,31 @@
   version = "v1.1.7"
 
 [[projects]]
+  digest = "1:08c58ac78a8c1f61e9a96350066d30fe194b8779799bd932a79932a5166a173f"
+  name = "github.com/kelseyhightower/envconfig"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "0b417c4ec4a8a82eecc22a1459a504aa55163d61"
+  version = "v1.4.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1deac37d0fcf0d9964443c293b66b92aa1662b713b7e49e750cd67adf01bb45e"
+  name = "github.com/knative/eventing"
+  packages = [
+    "pkg/apis/duck",
+    "pkg/apis/duck/v1alpha1",
+    "pkg/apis/eventing",
+    "pkg/apis/eventing/v1alpha1",
+    "pkg/duck",
+    "pkg/logging",
+    "pkg/reconciler/names",
+    "pkg/utils",
+  ]
+  pruneopts = "NUT"
+  revision = "b8575823fb88c8042e6d8bb4f8ce41b250b4e51c"
+
+[[projects]]
   branch = "master"
   digest = "1:c5fcddf864b41dd694b4348b06406904ba8b2e403a3a1bb1a565104beb2b4092"
   name = "github.com/knative/test-infra"
@@ -345,6 +421,26 @@
   version = "1.0.1"
 
 [[projects]]
+  digest = "1:1904e7dd4a67274b95147e9a663432d1c523ea98f8c948bb3a67d4ce1dd346b6"
+  name = "github.com/openzipkin/zipkin-go"
+  packages = [
+    "model",
+    "reporter",
+    "reporter/http",
+  ]
+  pruneopts = "NUT"
+  revision = "1277a5f30075b9c13d37775aed4f0f3b44d1a710"
+  version = "v0.2.0"
+
+[[projects]]
+  digest = "1:93b1d84c5fa6d1ea52f4114c37714cddd84d5b78f151b62bb101128dd51399bf"
+  name = "github.com/pborman/uuid"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "adf5a7427709b9deb95d29d3fa8a2bf9cfd388f1"
+  version = "v1.2"
+
+[[projects]]
   branch = "master"
   digest = "1:89da0f0574bc94cfd0ac8b59af67bf76cdd110d503df2721006b9f0492394333"
   name = "github.com/petar/GoLLRB"
@@ -369,7 +465,7 @@
   version = "v0.8.1"
 
 [[projects]]
-  digest = "1:097cc61836050f45cbb712ae3bb45d66fba464c16b8fac09907fa3c1f753eff6"
+  digest = "1:3d7ad9c93ee2e43dc7dd48b76f96804c365be7fe30e75f7405028c4e633d189a"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
@@ -377,8 +473,8 @@
     "prometheus/promhttp",
   ]
   pruneopts = "NUT"
-  revision = "4ab88e80c249ed361d3299e2930427d9ac43ef8d"
-  version = "v1.0.0"
+  revision = "2641b987480bca71fb39738eb8c8b0d577cb1d76"
+  version = "v0.9.4"
 
 [[projects]]
   branch = "master"
@@ -611,9 +707,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9b9245bd124d95af7072487cd1e5861174b859ebc31cbe9fbab3b88456701485"
+  digest = "1:043115444794c0475d5155841acc22e22a5659de2f903a9bb21ffb945d2dcfcf"
   name = "google.golang.org/api"
   packages = [
+    "googleapi",
+    "googleapi/internal/uritemplates",
     "googleapi/transport",
     "internal",
     "iterator",
@@ -649,7 +747,7 @@
   version = "v1.6.1"
 
 [[projects]]
-  digest = "1:def98947a836b93bfa0a168c85631b13df2541db0bdf28f2034b6e914638aee1"
+  digest = "1:6f9e2a9e09e3b4fb817f99d9788f2128d7647412b0e688d1e6b38a423a4e97ab"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api",
@@ -659,8 +757,11 @@
     "googleapis/api/metric",
     "googleapis/api/monitoredres",
     "googleapis/devtools/cloudtrace/v2",
+    "googleapis/firestore/v1",
     "googleapis/monitoring/v3",
+    "googleapis/rpc/code",
     "googleapis/rpc/status",
+    "googleapis/type/latlng",
     "protobuf/field_mask",
   ]
   pruneopts = "NUT"
@@ -777,7 +878,7 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:4e4a489c1c18d52da1d74b94c844276578809fc511f863a08cc7bff7c45b28ed"
+  digest = "1:ecd8d459a40c5135e6d50fe7ac191d39da56fbad2b4b222c2d74a045557f64e8"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -817,6 +918,7 @@
     "pkg/util/runtime",
     "pkg/util/sets",
     "pkg/util/strategicpatch",
+    "pkg/util/uuid",
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/wait",
@@ -831,7 +933,7 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:3ca7df0bbf551a81b152726b5e939a757c193d92999e8cc68059f565b1759151"
+  digest = "1:cee4790ae2fe6d1c9fce2104f1ca7f977c52677e537beae478df0aaed39c63a8"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -948,6 +1050,7 @@
     "plugin/pkg/client/auth/exec",
     "rest",
     "rest/watch",
+    "restmapper",
     "testing",
     "tools/auth",
     "tools/cache",
@@ -955,6 +1058,8 @@
     "tools/clientcmd/api",
     "tools/clientcmd/api/latest",
     "tools/clientcmd/api/v1",
+    "tools/leaderelection",
+    "tools/leaderelection/resourcelock",
     "tools/metrics",
     "tools/pager",
     "tools/record",
@@ -1040,6 +1145,7 @@
   packages = [
     "apis",
     "apis/duck",
+    "apis/duck/v1alpha1",
     "apis/duck/v1beta1",
     "changeset",
     "codegen/cmd/injection-gen",
@@ -1048,7 +1154,10 @@
     "configmap",
     "controller",
     "injection",
+    "injection/clients/dynamicclient",
     "injection/clients/kubeclient",
+    "injection/informers/kubeinformers/batchv1/job",
+    "injection/informers/kubeinformers/factory",
     "injection/sharedmain",
     "kmeta",
     "kmp",
@@ -1056,8 +1165,11 @@
     "logging/logkey",
     "metrics",
     "metrics/metricskey",
+    "ptr",
     "signals",
     "system",
+    "tracing",
+    "tracing/config",
     "tracker",
     "version",
     "webhook",
@@ -1065,13 +1177,48 @@
   pruneopts = "T"
   revision = "74c5d67ea097dd45bc66a6e2212ff70058efe005"
 
+[[projects]]
+  digest = "1:daf16bee25fe0de717c56b14d5baa4d48080c765011a17885c213e6840cb4198"
+  name = "sigs.k8s.io/controller-runtime"
+  packages = [
+    "pkg/cache",
+    "pkg/cache/internal",
+    "pkg/client",
+    "pkg/client/apiutil",
+    "pkg/internal/recorder",
+    "pkg/leaderelection",
+    "pkg/manager",
+    "pkg/metrics",
+    "pkg/patch",
+    "pkg/recorder",
+    "pkg/runtime/inject",
+    "pkg/runtime/log",
+    "pkg/webhook/admission",
+    "pkg/webhook/admission/types",
+    "pkg/webhook/internal/metrics",
+    "pkg/webhook/types",
+  ]
+  pruneopts = "NUT"
+  revision = "f6f0bc9611363b43664d08fb097ab13243ef621d"
+  version = "v0.1.9"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "cloud.google.com/go/firestore",
+    "github.com/cloudevents/sdk-go",
+    "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
+    "github.com/kelseyhightower/envconfig",
+    "github.com/knative/eventing/pkg/duck",
     "github.com/knative/test-infra/scripts",
     "github.com/knative/test-infra/tools/dep-collector",
+    "go.opencensus.io/plugin/ochttp",
+    "go.opencensus.io/plugin/ochttp/propagation/b3",
     "go.uber.org/zap",
+    "google.golang.org/api/iterator",
+    "google.golang.org/api/option",
+    "k8s.io/api/batch/v1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/api/errors",
@@ -1104,12 +1251,16 @@
     "knative.dev/pkg/configmap",
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
+    "knative.dev/pkg/injection/clients/kubeclient",
+    "knative.dev/pkg/injection/informers/kubeinformers/batchv1/job",
     "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/logging",
     "knative.dev/pkg/logging/logkey",
+    "knative.dev/pkg/ptr",
     "knative.dev/pkg/signals",
     "knative.dev/pkg/system",
+    "knative.dev/pkg/tracing",
     "knative.dev/pkg/tracker",
     "knative.dev/pkg/version",
     "knative.dev/pkg/webhook",

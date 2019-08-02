@@ -19,11 +19,16 @@ package jobsource
 import (
 	"context"
 
+	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	sourcesclient "github.com/n3wscott/sources/pkg/client/injection/client"
 	jsinformer "github.com/n3wscott/sources/pkg/client/injection/informers/sources/v1alpha1/jobsource"
+	"knative.dev/pkg/injection/clients/kubeclient"
+	jobinformer "knative.dev/pkg/injection/informers/kubeinformers/batchv1/job"
 
+	"github.com/knative/eventing/pkg/duck"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -43,19 +48,27 @@ func NewController(
 	logger := logging.FromContext(ctx)
 
 	jsInformer := jsinformer.Get(ctx)
+	jobInformer := jobinformer.Get(ctx)
 
-	c := &Reconciler{
-		Client: sourcesclient.Get(ctx),
-		Lister: jsInformer.Lister(),
+	r := &Reconciler{
+		KubeClientSet: kubeclient.Get(ctx),
+		Client:        sourcesclient.Get(ctx),
+		Lister:        jsInformer.Lister(),
 		Recorder: record.NewBroadcaster().NewRecorder(
 			scheme.Scheme, corev1.EventSource{Component: controllerAgentName}),
 	}
-	impl := controller.NewImpl(c, logger, "JobSources")
+	impl := controller.NewImpl(r, logger, "JobSources")
+	r.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
 
 	logger.Info("Setting up event handlers")
 
 	jsInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	c.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	jobInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("JobSource")),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
+
+	r.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	return impl
 }
