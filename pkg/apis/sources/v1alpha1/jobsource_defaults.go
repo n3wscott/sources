@@ -40,7 +40,6 @@ func (js *JobSource) SetDefaults(ctx context.Context) {
 	// Set something valid and sane for this job.
 	if tSpec := &js.Spec.Template.Spec; tSpec.RestartPolicy == "" {
 		if *js.Spec.BackoffLimit > 0 {
-
 			tSpec.RestartPolicy = corev1.RestartPolicyOnFailure
 		} else {
 			tSpec.RestartPolicy = corev1.RestartPolicyNever
