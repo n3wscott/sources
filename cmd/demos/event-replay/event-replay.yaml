@@ -5,6 +5,8 @@ metadata:
   labels:
     controller-tools.k8s.io: "1.0"
 spec:
+  # All spec fields from the Job are promoted
+  backoffLimit: 2
   template:
     spec:
       containers:

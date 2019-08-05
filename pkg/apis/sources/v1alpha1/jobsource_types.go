@@ -16,6 +16,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -50,17 +51,16 @@ var _ kmeta.OwnerRefable = (*JobSource)(nil)
 
 // JobSourceSpec holds the desired state of the JobSource (from the client).
 type JobSourceSpec struct {
-	// Template describes the pods that will be created.
-	// +required
-	Template *corev1.PodTemplateSpec `json:"template,omitempty"`
+	batchv1.JobSpec `json:",inline"`
 
 	// Sink is a reference to an object that will resolve to URI to send
 	// events to.
 	// +required
 	Sink *corev1.ObjectReference `json:"sink,omitempty"`
 
-	// OutputFormat describes the output format the source should send
-	// events in. All formats are over HTTP. If omitted, defaults to binary.
+	// OutputFormat describes the CloudEvent output format the source
+	// should send events in. All formats are over HTTP.
+	// Defaults to binary.
 	// +optional
 	OutputFormat OutputFormatType `json:"outputFormat,omitempty"`
 }

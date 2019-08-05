@@ -20,68 +20,56 @@ import (
 	"fmt"
 
 	"github.com/knative/eventing/pkg/utils"
+	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	"knative.dev/pkg/kmeta"
-	"knative.dev/pkg/ptr"
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func MakeJob(args Arguments) *batchv1.Job {
-	podTemplate := args.Template
+const (
+	labelKey = "sources.knative.dev/jobsource"
+)
+
+func MakeJob(js *v1alpha1.JobSource) *batchv1.Job {
+	podTemplate := &js.Spec.Template
 	if podTemplate.ObjectMeta.Labels == nil {
 		podTemplate.ObjectMeta.Labels = make(map[string]string)
 	}
-	podTemplate.ObjectMeta.Labels[labelKey] = args.Owner.GetObjectMeta().GetName()
-	podTemplate.Spec.RestartPolicy = corev1.RestartPolicyNever
+	podTemplate.ObjectMeta.Labels[labelKey] = js.GetObjectMeta().GetName()
 
 	containers := []corev1.Container{}
 	for i, c := range podTemplate.Spec.Containers {
 		if c.Name == "" {
 			c.Name = fmt.Sprintf("jobsource%d", i)
 		}
-		c.Env = append(c.Env, corev1.EnvVar{Name: "K_SINK", Value: args.SinkURI})
-		c.Env = append(c.Env, corev1.EnvVar{Name: "K_OUTPUT_FORMAT", Value: string(args.OutputFormat)})
+		c.Env = append(c.Env, corev1.EnvVar{Name: "K_SINK", Value: js.Status.SinkURI})
+		c.Env = append(c.Env, corev1.EnvVar{Name: "K_OUTPUT_FORMAT", Value: string(js.Spec.OutputFormat)})
 		containers = append(containers, c)
 	}
 	podTemplate.Spec.Containers = containers
 
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            JobName(args.Owner.GetObjectMeta()),
-			Namespace:       args.Owner.GetObjectMeta().GetNamespace(),
-			Labels:          Labels(args.Owner),
-			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(args.Owner)},
+			Name:            JobName(js.GetObjectMeta()),
+			Namespace:       js.GetObjectMeta().GetNamespace(),
+			Labels:          Labels(js),
+			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(js)},
 		},
-		Spec: batchv1.JobSpec{
-			BackoffLimit: ptr.Int32(5),
-			Parallelism:  ptr.Int32(1),
-			Completions:  ptr.Int32(1),
-			Template:     *podTemplate,
-		},
+		Spec: js.Spec.JobSpec,
 	}
 
-	if args.Annotations != nil {
-		if job.Spec.Template.ObjectMeta.Annotations == nil {
-			job.Spec.Template.ObjectMeta.Annotations = make(map[string]string, len(args.Annotations))
-		}
-		for k, v := range args.Annotations {
-			job.Spec.Template.ObjectMeta.Annotations[k] = v
-		}
-	}
-
-	if args.Labels != nil {
-		for k, v := range args.Labels {
-			if k != labelKey {
-				job.Spec.Template.ObjectMeta.Labels[k] = v
-			}
-		}
-	}
+	// TODO(spencer-p) Set job.Spec.Template.ObjectMeta.Annotations or .Labels?
 	return job
 }
 
 func JobName(owner metav1.Object) string {
-	// TODO(spencer-p) Verify proper use here w/ Adam
 	return utils.GenerateFixedName(owner, owner.GetName()+"-jobsource-")
+}
+
+func Labels(owner kmeta.OwnerRefable) map[string]string {
+	return map[string]string{
+		labelKey: owner.GetObjectMeta().GetName(),
+	}
 }
