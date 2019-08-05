@@ -1,7 +1,7 @@
 # Motivation
 
 The goal of the Knative Sources is to provide a common toolkit and API
-framework for integrating with event producers and provide those events into 
+framework for integrating with event producers and provide those events into
 the cluster.
 
 By extending basic primitives like Job, Deployment, and custom resources like
