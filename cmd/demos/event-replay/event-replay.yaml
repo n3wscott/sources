@@ -2,8 +2,6 @@ apiVersion: sources.knative.dev/v1alpha1
 kind: JobSource
 metadata:
   name: event-replay
-  labels:
-    controller-tools.k8s.io: "1.0"
 spec:
   # All spec fields from the Job are promoted
   backoffLimit: 2

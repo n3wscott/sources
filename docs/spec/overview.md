@@ -5,7 +5,7 @@ event to another resource on the cluster via CloudEvent. Sourcing events is
 critical to developing a distributed system that reacts to events.
 
 A Source:
- - Produces CloudEvents in some way
+ - Produces or imports CloudEvents in some way
  - Sends CloudEvents
    - to a **sink** that it is told about
    - with a requested encoding (structured or binary)

@@ -11,8 +11,6 @@ apiVersion: sources.knative.dev/v1alpha1
 kind: JobSource
 metadata:
   name: my-jobsource
-  labels:
-    controller-tools.k8s.io: "1.0"
 spec:
   # A template is required.
   template:
@@ -26,10 +24,13 @@ spec:
   backoffLimit: 2
 
   # is a corev1.ObjectReference.
-  sink: ...
+  sink:
+    apiVersion: v1
+    kind: Service
+    name: my-service
 
   # is either the string "structured" or "binary".
-  outputFormat: ...
+  outputFormat: "binary"
 ```
 
 ### CronJobSource

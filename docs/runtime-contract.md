@@ -1,6 +1,6 @@
 similar but way simpler to this: https://github.com/knative/serving/blob/master/docs/runtime-contract.md
 
-# Knative Runtime Contract
+# Knative Sources Runtime Contract
 
 ## Background
 
@@ -42,7 +42,7 @@ Containers written by developers are subject to the following:
    matching `K_OUTPUT_FORMAT`.
  - The container should send CloudEvents over HTTP POST.
    - Note that the sink does not necessarily have to have the scheme `http` or
-     `https`, but this is not the standard use case.
+     `https`, but HTTP is the standard use case.
  - The container may use any version of CloudEvents.
 
 TODO: fill in details, add examples.
@@ -56,9 +56,10 @@ TODO: fill in details, add examples.
  - A JobSource will run to completion (or however many completions are specified
    in the spec) and mark itself as succeeded. This state is terminal and no
    further action will take place.
- - A JobSource *must not* be killed and restarted when the sink changes.
+ - A JobSource *will not* be killed and restarted when the sink changes after
+   the Job has started.
    - Because a Job is meant to be a short-lived resource, sink changes will be
-     ignored.
+     ignored after the Job starts.
 
 ### CronJobSource
 
