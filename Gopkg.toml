@@ -37,8 +37,12 @@ required = [
   version = "kubernetes-1.12.6"
 
 [[override]]
+  name = "k8s.io/apiextensions-apiserver"
+  version = "kubernetes-1.12.6"
+
+[[override]]
   name = "knative.dev/pkg"
-  branch = "master"
+  branch = "release-0.8"
 
 [[override]]
   name = "github.com/knative/eventing"
@@ -67,7 +71,7 @@ required = [
   name = "go.opencensus.io"
   # Needed because this includes the appropriate version of metricsdata
   version = "v0.22.0"
-  
+
 [prune]
   go-tests = true
   unused-packages = true
@@ -86,3 +90,8 @@ required = [
 [[prune.project]]
   name = "github.com/knative/test-infra"
   non-go = false
+
+# Required for opencensus.
+[[override]]
+  name="github.com/golang/protobuf"
+  version = "1.3.2"

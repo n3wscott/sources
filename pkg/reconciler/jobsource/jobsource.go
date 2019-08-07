@@ -53,24 +53,30 @@ var (
 // Reconciler implements controller.Reconciler for JobSource resources.
 type Reconciler struct {
 	// KubeClientSet allows us to talk to k8s.
+	// +required
 	KubeClientSet kubernetes.Interface
 
 	// Client is used to write back status updates.
+	// +required
 	Client clientset.Interface
 
 	// Listers index properties about resources
+	// +required
 	Lister listers.JobSourceLister
 
 	// The tracker builds an index of what resources are watching other
 	// resources so that we can immediately react to changes to changes in
 	// tracked resources.
+	// +required
 	Tracker tracker.Interface
 
 	// Recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
+	// +required
 	Recorder record.EventRecorder
 
 	// Common logic for reconciling sinks
+	// +required
 	sinkReconciler *duck.SinkReconciler
 }
 
