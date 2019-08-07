@@ -24,6 +24,7 @@ import (
 	"reflect"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
+	"github.com/n3wscott/sources/pkg/reconciler"
 	"github.com/n3wscott/sources/pkg/reconciler/jobsource/resources"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -32,17 +33,12 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 
-	"github.com/knative/eventing/pkg/duck"
-	clientset "github.com/n3wscott/sources/pkg/client/clientset/versioned"
 	listers "github.com/n3wscott/sources/pkg/client/listers/sources/v1alpha1"
 	"go.uber.org/zap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/tracker"
 )
 
 var (
@@ -52,32 +48,12 @@ var (
 
 // Reconciler implements controller.Reconciler for JobSource resources.
 type Reconciler struct {
-	// KubeClientSet allows us to talk to k8s.
 	// +required
-	KubeClientSet kubernetes.Interface
+	*reconciler.Base
 
-	// Client is used to write back status updates.
-	// +required
-	Client clientset.Interface
-
-	// Listers index properties about resources
+	// Lister allows us to query for JobSources
 	// +required
 	Lister listers.JobSourceLister
-
-	// The tracker builds an index of what resources are watching other
-	// resources so that we can immediately react to changes to changes in
-	// tracked resources.
-	// +required
-	Tracker tracker.Interface
-
-	// Recorder is an event recorder for recording Event resources to the
-	// Kubernetes API.
-	// +required
-	Recorder record.EventRecorder
-
-	// Common logic for reconciling sinks
-	// +required
-	sinkReconciler *duck.SinkReconciler
 }
 
 // Check that our Reconciler implements controller.Reconciler
@@ -205,7 +181,7 @@ func (r *Reconciler) reconcileSink(ctx context.Context, js *v1alpha1.JobSource) 
 	}
 
 	desc := fmt.Sprintf("%s/%s, %s", js.Namespace, js.Name, js.GroupVersionKind().String())
-	uri, err := r.sinkReconciler.GetSinkURI(ref, js, desc)
+	uri, err := r.SinkReconciler.GetSinkURI(ref, js, desc)
 	if err != nil {
 		js.Status.MarkNoSink("NotFound", "Could not get sink URI from %s/%s: %v", ref.Namespace, ref.Name, err)
 		return err
@@ -239,7 +215,7 @@ func (r *Reconciler) updateStatus(desired *v1alpha1.JobSource) (*v1alpha1.JobSou
 	// Don't modify the informers copy
 	existing := actual.DeepCopy()
 	existing.Status = desired.Status
-	return r.Client.SourcesV1alpha1().JobSources(desired.Namespace).UpdateStatus(existing)
+	return r.SourcesClientSet.SourcesV1alpha1().JobSources(desired.Namespace).UpdateStatus(existing)
 }
 
 // isGoodURL checks that a URL has the bare minimum amount of information to route properly.

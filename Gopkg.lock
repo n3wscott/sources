@@ -241,45 +241,12 @@
   revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
 
 [[projects]]
-  digest = "1:7915c656a10819b240db94ffd6afc6a621af4687db735341d9919668750485ec"
-  name = "github.com/google/go-containerregistry"
-  packages = ["pkg/name"]
-  pruneopts = "NUT"
-  revision = "abf9ef06abd9f532944e28e8942644ea4b710a40"
-
-[[projects]]
   digest = "1:52c5834e2bebac9030c97cc0798ac11c3aa8a39f098aeb419f142533da6cd3cc"
   name = "github.com/google/gofuzz"
   packages = ["."]
   pruneopts = "NUT"
   revision = "f140a6486e521aad38f5917de355cbf147cc0496"
   version = "v1.0.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:92e964dfb5d28b4539558c9ecdd4d5c1fa51f86000b68ce02832e361c1964ca9"
-  name = "github.com/google/knative-gcp"
-  packages = [
-    "pkg/apis/events",
-    "pkg/apis/events/v1alpha1",
-    "pkg/apis/messaging",
-    "pkg/apis/messaging/v1alpha1",
-    "pkg/apis/pubsub",
-    "pkg/apis/pubsub/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/fake",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/events/v1alpha1",
-    "pkg/client/clientset/versioned/typed/events/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/messaging/v1alpha1",
-    "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/pubsub/v1alpha1",
-    "pkg/client/clientset/versioned/typed/pubsub/v1alpha1/fake",
-    "pkg/client/injection/client",
-    "pkg/client/injection/client/fake",
-  ]
-  pruneopts = "NUT"
-  revision = "a76047c102147e8291e5fad28169989686f26f6a"
 
 [[projects]]
   branch = "master"
@@ -387,7 +354,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ebad2a9d1f793d235901804f6b20b63196a8b0f37ebe6936db917be9118ca761"
+  digest = "1:624bdbda29c58634868d657be13ddfcb8d69d03b6cd7c815c833afef8560732d"
   name = "github.com/knative/eventing"
   packages = [
     "pkg/apis/duck",
@@ -407,8 +374,11 @@
     "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1",
     "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "pkg/client/injection/client",
+    "pkg/client/injection/client/fake",
     "pkg/duck",
     "pkg/logging",
+    "pkg/reconciler",
     "pkg/reconciler/names",
     "pkg/utils",
   ]
@@ -651,14 +621,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b4e5a3f0688e6c985bdbdf02125ee249c1ecc733e7681fc582f14c21ce4649a0"
+  digest = "1:7d50c06032a6fd1f8473a0bc63f478f862ea63a07228571c3b72fd28e6cc6758"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
     "http/httpguts",
     "http2",
-    "http2/h2c",
     "http2/hpack",
     "idna",
     "internal/timeseries",
@@ -1294,39 +1263,6 @@
   revision = "2b848f71969c997809a2dbea8351eaadb23e9bc9"
 
 [[projects]]
-  digest = "1:d265b283a3d99a557687f8e9a6888a52dcd60a4b50439b43baeb20614e78cecd"
-  name = "knative.dev/serving"
-  packages = [
-    "pkg/apis/autoscaling",
-    "pkg/apis/autoscaling/v1alpha1",
-    "pkg/apis/config",
-    "pkg/apis/networking",
-    "pkg/apis/networking/v1alpha1",
-    "pkg/apis/serving",
-    "pkg/apis/serving/v1alpha1",
-    "pkg/apis/serving/v1beta1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/fake",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
-    "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/networking/v1alpha1",
-    "pkg/client/clientset/versioned/typed/networking/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/serving/v1alpha1",
-    "pkg/client/clientset/versioned/typed/serving/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/serving/v1beta1",
-    "pkg/client/clientset/versioned/typed/serving/v1beta1/fake",
-    "pkg/client/injection/client",
-    "pkg/client/injection/client/fake",
-    "pkg/gc",
-    "pkg/network",
-    "pkg/reconciler/route/config",
-  ]
-  pruneopts = "NUT"
-  revision = "3f73b117b61ee5d8fe5dcedd6cca2c96014329a9"
-  version = "v0.8.0"
-
-[[projects]]
   digest = "1:daf16bee25fe0de717c56b14d5baa4d48080c765011a17885c213e6840cb4198"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
@@ -1358,10 +1294,11 @@
     "cloud.google.com/go/firestore",
     "github.com/cloudevents/sdk-go",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
-    "github.com/google/knative-gcp/pkg/client/injection/client/fake",
     "github.com/kelseyhightower/envconfig",
     "github.com/knative/eventing/pkg/client/clientset/versioned/fake",
+    "github.com/knative/eventing/pkg/client/injection/client/fake",
     "github.com/knative/eventing/pkg/duck",
+    "github.com/knative/eventing/pkg/reconciler",
     "github.com/knative/eventing/pkg/utils",
     "github.com/knative/test-infra/scripts",
     "github.com/knative/test-infra/tools/dep-collector",
@@ -1415,7 +1352,6 @@
     "knative.dev/pkg/controller",
     "knative.dev/pkg/injection",
     "knative.dev/pkg/injection/clients/dynamicclient/fake",
-    "knative.dev/pkg/injection/clients/kubeclient",
     "knative.dev/pkg/injection/clients/kubeclient/fake",
     "knative.dev/pkg/injection/informers/kubeinformers/batchv1/job",
     "knative.dev/pkg/injection/sharedmain",
@@ -1428,10 +1364,8 @@
     "knative.dev/pkg/signals",
     "knative.dev/pkg/system",
     "knative.dev/pkg/tracing",
-    "knative.dev/pkg/tracker",
     "knative.dev/pkg/version",
     "knative.dev/pkg/webhook",
-    "knative.dev/serving/pkg/client/injection/client/fake",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -26,7 +26,8 @@ import (
 	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
 
-	fakerunclient "github.com/n3wscott/sources/pkg/client/injection/client/fake"
+	fakeeventingclient "github.com/knative/eventing/pkg/client/injection/client/fake"
+	fakesourcesclient "github.com/n3wscott/sources/pkg/client/injection/client/fake"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	fakekubeclient "knative.dev/pkg/injection/clients/kubeclient/fake"
 
@@ -52,7 +53,8 @@ func MakeFactory(ctor Ctor) Factory {
 		ctx = logging.WithLogger(ctx, logger)
 
 		ctx, kubeClient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
-		ctx, client := fakerunclient.With(ctx, ls.GetSourcesObjects()...)
+		ctx, client := fakesourcesclient.With(ctx, ls.GetSourcesObjects()...)
+		ctx, eventingclient := fakeeventingclient.With(ctx, ls.GetEventingObjects()...)
 
 		dynamicScheme := runtime.NewScheme()
 		for _, addTo := range clientSetSchemes {
@@ -95,7 +97,7 @@ func MakeFactory(ctor Ctor) Factory {
 			return ValidateUpdates(context.Background(), action)
 		})
 
-		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient}
+		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient, eventingclient}
 		eventList := EventList{Recorder: eventRecorder}
 
 		return c, actionRecorderList, eventList, statsReporter
