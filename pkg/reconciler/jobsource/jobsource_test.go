@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
+	"knative.dev/pkg/tracker"
 
 	. "github.com/n3wscott/sources/pkg/reconciler/testing"
 	. "knative.dev/pkg/reconciler/testing"
@@ -38,8 +39,8 @@ func TestJobSource(t *testing.T) {
 		return &Reconciler{
 			//KubeClientSet:  asdf,
 			//Client:         asdf,
-			//Lister:         asdf,
-			//Tracker:        asdf,
+			Lister:  listers.GetJobSourceLister(),
+			Tracker: tracker.New(func(string) {}, 0),
 			//Recorder:       asdf,
 			//sinkReconciler: asdf,
 		}
