@@ -53,6 +53,27 @@ func TestJobSource(t *testing.T) {
 		// Make sure Reconcile handles good keys that don't exist.
 		Key: "foo/not-found",
 	}, {
+		Name: "missing sink causes errors",
+		Objects: []runtime.Object{
+			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Status.InitializeConditions()
+			}),
+		},
+		Key:     key,
+		WantErr: true,
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+
+				js.Status.InitializeConditions()
+				js.Status.MarkNoSink("Missing", "Sink missing from spec")
+			}),
+		}},
+		WantEvents: []string{
+			Eventf(corev1.EventTypeWarning, "UpdateFailed", "Failed to update status for %q: missing field(s): spec.sink", jsName),
+		},
+	}, {
 		Name: "having sink starts a job",
 		Objects: []runtime.Object{
 			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
@@ -79,6 +100,10 @@ func TestJobSource(t *testing.T) {
 			}),
 		)},
 	}}
+
+	// TODO(spencer-p) sink not found, sink invalid value
+	// make the job succeed and see if the jobsource succeeds
+	// force failed job
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		return &Reconciler{
