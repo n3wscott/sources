@@ -297,10 +297,39 @@ func TestJobSource(t *testing.T) {
 				js.Status.MarkJobRunning("Job %q already exists.", jsJobFixedName)
 			}),
 		}},
-	}}
+	}, {
+		Name: "sink updates do not change anything after job starts",
+		Objects: []runtime.Object{
+			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Status.InitializeConditions()
+				js.Spec.Sink = &corev1.ObjectReference{
+					Name:       sinkName,
+					Namespace:  ns,
+					APIVersion: "testing.eventing.knative.dev/v1alpha1",
+					Kind:       "Sink",
+				}
+				js.Status.MarkSink(sinkURI)
+				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
+			}),
+			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Status.InitializeConditions()
+				js.Spec.Sink = &corev1.ObjectReference{
+					Name:       sinkName,
+					Namespace:  ns,
+					APIVersion: "testing.eventing.knative.dev/v1alpha1",
+					Kind:       "Sink",
+				}
+				js.Status.MarkSink(sinkURI)
+			}), func(job *batchv1.Job) {}),
 
-	// TODO(spencer-p)
-	// don't update sink if job already running
+			// This address is different than the one we marked
+			newUnstructuredSink("http", "garbage"),
+		},
+		Key: key,
+		// Expect nothing to happen
+	}}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		return &Reconciler{
