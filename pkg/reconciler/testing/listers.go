@@ -44,6 +44,11 @@ var subscriberAddToScheme = func(scheme *runtime.Scheme) error {
 	return nil
 }
 
+var sinkAddToScheme = func(scheme *runtime.Scheme) error {
+	scheme.AddKnownTypeWithName(schema.GroupVersionKind{Group: "testing.eventing.knative.dev", Version: "v1alpha1", Kind: "Sink"}, &unstructured.Unstructured{})
+	return nil
+}
+
 var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
 	fakesharedclientset.AddToScheme,
@@ -51,6 +56,7 @@ var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakesourcesclientset.AddToScheme,
 	fakeapiextensionsclientset.AddToScheme,
 	subscriberAddToScheme,
+	sinkAddToScheme,
 }
 
 type Listers struct {
@@ -96,9 +102,23 @@ func (l *Listers) GetEventingObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingclientset.AddToScheme)
 }
 
+func (l *Listers) GetSinkObjects() []runtime.Object {
+	return l.sorter.ObjectsForSchemeFunc(sinkAddToScheme)
+}
+
 func (l *Listers) GetAllObjects() []runtime.Object {
-	all := l.GetEventingObjects()
-	all = append(all, l.GetKubeObjects()...)
+	return l.GetObjectsFrom(
+		l.GetEventingObjects,
+		l.GetSinkObjects,
+		l.GetKubeObjects,
+	)
+}
+
+func (l *Listers) GetObjectsFrom(getters ...func() []runtime.Object) []runtime.Object {
+	var all []runtime.Object
+	for _, get := range getters {
+		all = append(all, get()...)
+	}
 	return all
 }
 

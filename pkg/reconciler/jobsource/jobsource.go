@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"reflect"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
@@ -42,7 +41,6 @@ import (
 )
 
 var (
-	errSinkInvalid = errors.New("Bad sink")
 	errSinkMissing = errors.New("Sink missing from spec")
 )
 
@@ -117,11 +115,7 @@ func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) erro
 	js.Status.InitializeConditions()
 
 	// Having a sink is a prereq for starting the job, so we reconcile the sink first
-	if err := r.reconcileSink(ctx, js); err == errSinkInvalid {
-		// No real error, but sink was bad
-		logger.Warn("Sink resolved to a bad URI")
-		return nil
-	} else if err != nil {
+	if err := r.reconcileSink(ctx, js); err != nil {
 		return err
 	}
 
@@ -187,11 +181,6 @@ func (r *Reconciler) reconcileSink(ctx context.Context, js *v1alpha1.JobSource) 
 		return err
 	}
 
-	if parsedURI, err := url.Parse(uri); err != nil || !isGoodURL(parsedURI) {
-		js.Status.MarkNoSink("InvalidValue", "SinkURI resolved to invalid sink: %s", uri)
-		return errSinkInvalid
-	}
-
 	js.Status.MarkSink(uri)
 
 	return nil
@@ -216,13 +205,6 @@ func (r *Reconciler) updateStatus(desired *v1alpha1.JobSource) (*v1alpha1.JobSou
 	existing := actual.DeepCopy()
 	existing.Status = desired.Status
 	return r.SourcesClientSet.SourcesV1alpha1().JobSources(desired.Namespace).UpdateStatus(existing)
-}
-
-// isGoodURL checks that a URL has the bare minimum amount of information to route properly.
-func isGoodURL(u *url.URL) bool {
-	// Scheme and Host should be enough. Path is allowed to be blank.
-	// ("https://example.com" parses to a blank path)
-	return u.Scheme != "" && u.Host != ""
 }
 
 // getJobCompletedCondition finds a JobCondition of the Job that has information about its completedness.
