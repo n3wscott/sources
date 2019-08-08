@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
 
 	listers "github.com/n3wscott/sources/pkg/client/listers/sources/v1alpha1"
@@ -99,6 +98,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 		return err
 	}
 	if reconcileErr != nil {
+		r.Logger.Warnw("Internal error reconciling:", zap.Error(reconcileErr))
 		r.Recorder.Event(resource, corev1.EventTypeWarning, "InternalError", reconcileErr.Error())
 	}
 	return reconcileErr
@@ -128,7 +128,7 @@ func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) erro
 
 // reconcileJob enforces the creation and lifecycle of the job. It assumes that the sink exists and is valid.
 func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) error {
-	job, err := r.getJob(ctx, js, labels.SelectorFromSet(resources.Labels(js)))
+	job, err := r.getJob(ctx, js)
 
 	if apierrs.IsNotFound(err) {
 		// No job, must create it
@@ -147,6 +147,7 @@ func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) e
 		js.Status.MarkJobRunning("Created Job %q.", job.Name)
 		return nil
 	} else if err != nil {
+		r.Logger.Warnw("Failed get:", zap.Error(err))
 		js.Status.MarkJobFailed("FailedGet", err.Error())
 		return fmt.Errorf("failed to get Job: %s", err)
 	}
@@ -185,7 +186,7 @@ func (r *Reconciler) reconcileSink(ctx context.Context, js *v1alpha1.JobSource) 
 	return nil
 }
 
-func (r *Reconciler) getJob(ctx context.Context, owner metav1.Object, ls labels.Selector) (*batchv1.Job, error) {
+func (r *Reconciler) getJob(ctx context.Context, owner metav1.Object) (*batchv1.Job, error) {
 	return r.KubeClientSet.BatchV1().Jobs(owner.GetNamespace()).Get(resources.JobName(owner), metav1.GetOptions{})
 }
 

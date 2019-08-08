@@ -20,8 +20,9 @@ import (
 	"context"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
+	"github.com/n3wscott/sources/pkg/reconciler/jobsource/resources"
 
-	//corev1 "k8s.io/api/core/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -41,4 +42,16 @@ func NewJobSource(name string, options ...JobSourceOption) *v1alpha1.JobSource {
 
 	js.SetDefaults(context.Background())
 	return js
+}
+
+type JobOption func(*batchv1.Job)
+
+func NewJob(js *v1alpha1.JobSource, options ...JobOption) *batchv1.Job {
+	job := resources.MakeJob(js)
+
+	for _, option := range options {
+		option(job)
+	}
+
+	return job
 }

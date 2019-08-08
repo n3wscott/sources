@@ -8,6 +8,7 @@ import (
 	"github.com/n3wscott/sources/pkg/reconciler"
 	"github.com/n3wscott/sources/pkg/reconciler/jobsource/resources"
 
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -28,6 +29,9 @@ const (
 	ns             = "default"
 	key            = ns + "/" + jsName
 	sinkURI        = "http://" + sinkName + "." + ns + ".svc.cluster.local/"
+
+	failreason  = "fail reason"
+	failmessage = "fail message"
 )
 
 func init() {
@@ -189,11 +193,87 @@ func TestJobSource(t *testing.T) {
 				js.Spec.Sink = newSink()
 			}),
 		)},
+	}, {
+		Name: "job succeed implies jobsource succeed",
+		Objects: []runtime.Object{
+			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Status.InitializeConditions()
+				js.Spec.Sink = newSink()
+				js.Status.MarkSink(sinkURI)
+				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
+			}),
+			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Status.InitializeConditions()
+				js.Spec.Sink = newSink()
+				js.Status.MarkSink(sinkURI)
+			}), func(job *batchv1.Job) {
+				// Mark the job as completed.  If this test
+				// fails in the future, it may be because the
+				// MakeJob function is inserting a success
+				// condition with status false.
+				job.Status.Conditions = append(job.Status.Conditions, batchv1.JobCondition{
+					Type:   batchv1.JobComplete,
+					Status: corev1.ConditionTrue,
+				})
+			}),
+		},
+		Key: key,
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Spec.Sink = newSink()
+
+				js.Status.InitializeConditions()
+				js.Spec.Sink = newSink()
+				js.Status.MarkSink(sinkURI)
+				js.Status.MarkJobSucceeded()
+			}),
+		}},
+	}, {
+		Name: "job failed implies jobsource failed",
+		Objects: []runtime.Object{
+			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Status.InitializeConditions()
+				js.Spec.Sink = newSink()
+				js.Status.MarkSink(sinkURI)
+				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
+			}),
+			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Status.InitializeConditions()
+				js.Spec.Sink = newSink()
+				js.Status.MarkSink(sinkURI)
+			}), func(job *batchv1.Job) {
+				// Mark the job as failed.
+				// See above test for potential issues.
+				job.Status.Conditions = append(job.Status.Conditions, batchv1.JobCondition{
+					Type:    batchv1.JobFailed,
+					Status:  corev1.ConditionTrue,
+					Reason:  failreason,
+					Message: failmessage,
+				})
+			}),
+		},
+		Key: key,
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Spec.Sink = newSink()
+
+				js.Status.InitializeConditions()
+				js.Spec.Sink = newSink()
+				js.Status.MarkSink(sinkURI)
+				js.Status.MarkJobFailed(failreason, failmessage)
+			}),
+		}},
 	}}
 
 	// TODO(spencer-p)
-	// make the job succeed and see if the jobsource succeeds
-	// force failed job
+	// don't update sink if job already running
+	// status updated to unknown if running
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		return &Reconciler{
