@@ -269,11 +269,38 @@ func TestJobSource(t *testing.T) {
 				js.Status.MarkJobFailed(failreason, failmessage)
 			}),
 		}},
+	}, {
+		Name: "job running means jobsource status unknown",
+		Objects: []runtime.Object{
+			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Status.InitializeConditions()
+				js.Spec.Sink = newSink()
+				js.Status.MarkSink(sinkURI)
+			}),
+			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Status.InitializeConditions()
+				js.Spec.Sink = newSink()
+				js.Status.MarkSink(sinkURI)
+			}), func(job *batchv1.Job) {}),
+		},
+		Key: key,
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+				js.UID = jsUID
+				js.Spec.Sink = newSink()
+
+				js.Status.InitializeConditions()
+				js.Spec.Sink = newSink()
+				js.Status.MarkSink(sinkURI)
+				js.Status.MarkJobRunning("Job %q already exists.", jsJobFixedName)
+			}),
+		}},
 	}}
 
 	// TODO(spencer-p)
 	// don't update sink if job already running
-	// status updated to unknown if running
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		return &Reconciler{

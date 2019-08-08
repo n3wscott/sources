@@ -157,6 +157,11 @@ func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) e
 		js.Status.MarkJobSucceeded()
 	} else if cond != nil && jobConditionFailed(cond) {
 		js.Status.MarkJobFailed(cond.Reason, cond.Message)
+	} else {
+		// Job is not finished, make sure the status reflects that
+		if !js.Status.IsJobRunning() {
+			js.Status.MarkJobRunning("Job %q already exists.", job.Name)
+		}
 	}
 
 	return nil
