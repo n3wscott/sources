@@ -105,7 +105,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 }
 
 func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) error {
-	logger := logging.FromContext(ctx)
 
 	if js.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
