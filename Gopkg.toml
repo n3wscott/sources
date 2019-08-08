@@ -46,7 +46,7 @@ required = [
 
 [[override]]
   name = "github.com/knative/eventing"
-  branch = "master"
+  branch = "release-0.8"
 
 [[override]]
   name = "google.golang.org/genproto"
