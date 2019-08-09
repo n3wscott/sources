@@ -20,10 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"reflect"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
+	"github.com/n3wscott/sources/pkg/reconciler"
 	"github.com/n3wscott/sources/pkg/reconciler/jobsource/resources"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -31,47 +31,26 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 
-	"github.com/knative/eventing/pkg/duck"
-	clientset "github.com/n3wscott/sources/pkg/client/clientset/versioned"
 	listers "github.com/n3wscott/sources/pkg/client/listers/sources/v1alpha1"
 	"go.uber.org/zap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/tracker"
 )
 
 var (
-	errSinkInvalid = errors.New("Bad sink")
 	errSinkMissing = errors.New("Sink missing from spec")
 )
 
 // Reconciler implements controller.Reconciler for JobSource resources.
 type Reconciler struct {
-	// KubeClientSet allows us to talk to k8s.
-	KubeClientSet kubernetes.Interface
+	// +required
+	*reconciler.Base
 
-	// Client is used to write back status updates.
-	Client clientset.Interface
-
-	// Listers index properties about resources
+	// Lister allows us to query for JobSources
+	// +required
 	Lister listers.JobSourceLister
-
-	// The tracker builds an index of what resources are watching other
-	// resources so that we can immediately react to changes to changes in
-	// tracked resources.
-	Tracker tracker.Interface
-
-	// Recorder is an event recorder for recording Event resources to the
-	// Kubernetes API.
-	Recorder record.EventRecorder
-
-	// Common logic for reconciling sinks
-	sinkReconciler *duck.SinkReconciler
 }
 
 // Check that our Reconciler implements controller.Reconciler
@@ -119,13 +98,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 		return err
 	}
 	if reconcileErr != nil {
+		r.Logger.Warnw("Internal error reconciling:", zap.Error(reconcileErr))
 		r.Recorder.Event(resource, corev1.EventTypeWarning, "InternalError", reconcileErr.Error())
 	}
 	return reconcileErr
 }
 
 func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) error {
-	logger := logging.FromContext(ctx)
 
 	if js.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
@@ -135,11 +114,7 @@ func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) erro
 	js.Status.InitializeConditions()
 
 	// Having a sink is a prereq for starting the job, so we reconcile the sink first
-	if err := r.reconcileSink(ctx, js); err == errSinkInvalid {
-		// No real error, but sink was bad
-		logger.Warn("Sink resolved to a bad URI")
-		return nil
-	} else if err != nil {
+	if err := r.reconcileSink(ctx, js); err != nil {
 		return err
 	}
 
@@ -153,7 +128,7 @@ func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) erro
 
 // reconcileJob enforces the creation and lifecycle of the job. It assumes that the sink exists and is valid.
 func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) error {
-	job, err := r.getJob(ctx, js, labels.SelectorFromSet(resources.Labels(js)))
+	job, err := r.getJob(ctx, js)
 
 	if apierrs.IsNotFound(err) {
 		// No job, must create it
@@ -172,6 +147,7 @@ func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) e
 		js.Status.MarkJobRunning("Created Job %q.", job.Name)
 		return nil
 	} else if err != nil {
+		r.Logger.Warnw("Failed get:", zap.Error(err))
 		js.Status.MarkJobFailed("FailedGet", err.Error())
 		return fmt.Errorf("failed to get Job: %s", err)
 	}
@@ -181,6 +157,11 @@ func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) e
 		js.Status.MarkJobSucceeded()
 	} else if cond != nil && jobConditionFailed(cond) {
 		js.Status.MarkJobFailed(cond.Reason, cond.Message)
+	} else {
+		// Job is not finished, make sure the status reflects that
+		if !js.Status.IsJobRunning() {
+			js.Status.MarkJobRunning("Job %q already exists.", job.Name)
+		}
 	}
 
 	return nil
@@ -199,15 +180,10 @@ func (r *Reconciler) reconcileSink(ctx context.Context, js *v1alpha1.JobSource) 
 	}
 
 	desc := fmt.Sprintf("%s/%s, %s", js.Namespace, js.Name, js.GroupVersionKind().String())
-	uri, err := r.sinkReconciler.GetSinkURI(ref, js, desc)
+	uri, err := r.SinkReconciler.GetSinkURI(ref, js, desc)
 	if err != nil {
 		js.Status.MarkNoSink("NotFound", "Could not get sink URI from %s/%s: %v", ref.Namespace, ref.Name, err)
 		return err
-	}
-
-	if parsedURI, err := url.Parse(uri); err != nil || !isGoodURL(parsedURI) {
-		js.Status.MarkNoSink("InvalidValue", "SinkURI resolved to invalid sink: %s", uri)
-		return errSinkInvalid
 	}
 
 	js.Status.MarkSink(uri)
@@ -215,7 +191,7 @@ func (r *Reconciler) reconcileSink(ctx context.Context, js *v1alpha1.JobSource) 
 	return nil
 }
 
-func (r *Reconciler) getJob(ctx context.Context, owner metav1.Object, ls labels.Selector) (*batchv1.Job, error) {
+func (r *Reconciler) getJob(ctx context.Context, owner metav1.Object) (*batchv1.Job, error) {
 	return r.KubeClientSet.BatchV1().Jobs(owner.GetNamespace()).Get(resources.JobName(owner), metav1.GetOptions{})
 }
 
@@ -233,14 +209,7 @@ func (r *Reconciler) updateStatus(desired *v1alpha1.JobSource) (*v1alpha1.JobSou
 	// Don't modify the informers copy
 	existing := actual.DeepCopy()
 	existing.Status = desired.Status
-	return r.Client.SourcesV1alpha1().JobSources(desired.Namespace).UpdateStatus(existing)
-}
-
-// isGoodURL checks that a URL has the bare minimum amount of information to route properly.
-func isGoodURL(u *url.URL) bool {
-	// Scheme and Host should be enough. Path is allowed to be blank.
-	// ("https://example.com" parses to a blank path)
-	return u.Scheme != "" && u.Host != ""
+	return r.SourcesClientSet.SourcesV1alpha1().JobSources(desired.Namespace).UpdateStatus(existing)
 }
 
 // getJobCompletedCondition finds a JobCondition of the Job that has information about its completedness.
