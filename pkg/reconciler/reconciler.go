@@ -19,8 +19,8 @@ package reconciler
 import (
 	"context"
 
-	"github.com/knative/eventing/pkg/duck"
-	eventingreconciler "github.com/knative/eventing/pkg/reconciler"
+	"knative.dev/eventing/pkg/duck"
+	eventingreconciler "knative.dev/eventing/pkg/reconciler"
 	clientset "github.com/n3wscott/sources/pkg/client/clientset/versioned"
 	sourcesclient "github.com/n3wscott/sources/pkg/client/injection/client"
 	"knative.dev/pkg/configmap"

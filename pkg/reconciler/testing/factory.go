@@ -29,7 +29,7 @@ import (
 	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
 
-	fakeeventingclient "github.com/knative/eventing/pkg/client/injection/client/fake"
+	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	fakesourcesclient "github.com/n3wscott/sources/pkg/client/injection/client/fake"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	fakekubeclient "knative.dev/pkg/injection/clients/kubeclient/fake"
