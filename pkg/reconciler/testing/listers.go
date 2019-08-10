@@ -17,7 +17,7 @@ limitations under the License.
 package testing
 
 import (
-	fakeeventingclientset "github.com/knative/eventing/pkg/client/clientset/versioned/fake"
+	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	sourcesv1alpha1 "github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	fakesourcesclientset "github.com/n3wscott/sources/pkg/client/clientset/versioned/fake"
 	sourceslisters "github.com/n3wscott/sources/pkg/client/listers/sources/v1alpha1"

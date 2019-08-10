@@ -353,50 +353,6 @@
   version = "v1.4.0"
 
 [[projects]]
-  branch = "release-0.8"
-  digest = "1:aff534f76258395bcb12dc9b9b06e471e628d234418fc9c56415a7dcc6e3f72c"
-  name = "github.com/knative/eventing"
-  packages = [
-    "pkg/apis/duck",
-    "pkg/apis/duck/v1alpha1",
-    "pkg/apis/eventing",
-    "pkg/apis/eventing/v1alpha1",
-    "pkg/apis/messaging",
-    "pkg/apis/messaging/v1alpha1",
-    "pkg/apis/sources",
-    "pkg/apis/sources/v1alpha1",
-    "pkg/client/clientset/versioned",
-    "pkg/client/clientset/versioned/fake",
-    "pkg/client/clientset/versioned/scheme",
-    "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
-    "pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/messaging/v1alpha1",
-    "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
-    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
-    "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
-    "pkg/client/injection/client",
-    "pkg/client/injection/client/fake",
-    "pkg/duck",
-    "pkg/logging",
-    "pkg/reconciler",
-    "pkg/reconciler/names",
-    "pkg/utils",
-  ]
-  pruneopts = "NUT"
-  revision = "a59dae6f326057211f43f7c2d1414a9fd821b8aa"
-
-[[projects]]
-  branch = "master"
-  digest = "1:c5fcddf864b41dd694b4348b06406904ba8b2e403a3a1bb1a565104beb2b4092"
-  name = "github.com/knative/test-infra"
-  packages = [
-    "scripts",
-    "tools/dep-collector",
-  ]
-  pruneopts = "UT"
-  revision = "a8b30107c7c11af4fb78d7d0a43b90d8818f241b"
-
-[[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
   name = "github.com/markbates/inflect"
   packages = ["."]
@@ -1207,8 +1163,41 @@
   revision = "5e22f3d471e6f24ca20becfdffdc6206c7cecac8"
 
 [[projects]]
-  branch = "release-0.8"
-  digest = "1:bb229ac008f2b7ddcd122f857584627de4cf78f31f3001ca79560f48659db88f"
+  branch = "master"
+  digest = "1:333d8964bfd8f968187a6b5a32be46c9b9cf80d98f5d2e0b152a3c80706de0b7"
+  name = "knative.dev/eventing"
+  packages = [
+    "pkg/apis/duck",
+    "pkg/apis/duck/v1alpha1",
+    "pkg/apis/eventing",
+    "pkg/apis/eventing/v1alpha1",
+    "pkg/apis/messaging",
+    "pkg/apis/messaging/v1alpha1",
+    "pkg/apis/sources",
+    "pkg/apis/sources/v1alpha1",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/fake",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/eventing/v1alpha1",
+    "pkg/client/clientset/versioned/typed/eventing/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/messaging/v1alpha1",
+    "pkg/client/clientset/versioned/typed/messaging/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1",
+    "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
+    "pkg/client/injection/client",
+    "pkg/client/injection/client/fake",
+    "pkg/duck",
+    "pkg/logging",
+    "pkg/reconciler",
+    "pkg/reconciler/names",
+    "pkg/utils",
+  ]
+  pruneopts = "NUT"
+  revision = "b2166ac5dd43c3d6e07fb773704f01e47c69e42d"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f2debf8e777276b61a457f5b5790bf52a16f5a5db59721e0679d32d730b7a649"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1260,7 +1249,18 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "2b848f71969c997809a2dbea8351eaadb23e9bc9"
+  revision = "53034608f64e82c8e892d46197f687edb6f78b93"
+
+[[projects]]
+  branch = "master"
+  digest = "1:c5fcddf864b41dd694b4348b06406904ba8b2e403a3a1bb1a565104beb2b4092"
+  name = "knative.dev/test-infra"
+  packages = [
+    "scripts",
+    "tools/dep-collector",
+  ]
+  pruneopts = "UT"
+  revision = "a8b30107c7c11af4fb78d7d0a43b90d8818f241b"
 
 [[projects]]
   digest = "1:daf16bee25fe0de717c56b14d5baa4d48080c765011a17885c213e6840cb4198"
@@ -1295,13 +1295,6 @@
     "github.com/cloudevents/sdk-go",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
     "github.com/kelseyhightower/envconfig",
-    "github.com/knative/eventing/pkg/client/clientset/versioned/fake",
-    "github.com/knative/eventing/pkg/client/injection/client/fake",
-    "github.com/knative/eventing/pkg/duck",
-    "github.com/knative/eventing/pkg/reconciler",
-    "github.com/knative/eventing/pkg/utils",
-    "github.com/knative/test-infra/scripts",
-    "github.com/knative/test-infra/tools/dep-collector",
     "go.opencensus.io/plugin/ochttp",
     "go.opencensus.io/plugin/ochttp/propagation/b3",
     "go.uber.org/zap",
@@ -1344,6 +1337,11 @@
     "k8s.io/code-generator/cmd/defaulter-gen",
     "k8s.io/code-generator/cmd/informer-gen",
     "k8s.io/code-generator/cmd/lister-gen",
+    "knative.dev/eventing/pkg/client/clientset/versioned/fake",
+    "knative.dev/eventing/pkg/client/injection/client/fake",
+    "knative.dev/eventing/pkg/duck",
+    "knative.dev/eventing/pkg/reconciler",
+    "knative.dev/eventing/pkg/utils",
     "knative.dev/pkg/apis",
     "knative.dev/pkg/apis/duck/v1beta1",
     "knative.dev/pkg/client/clientset/versioned/fake",
@@ -1366,6 +1364,8 @@
     "knative.dev/pkg/tracing",
     "knative.dev/pkg/version",
     "knative.dev/pkg/webhook",
+    "knative.dev/test-infra/scripts",
+    "knative.dev/test-infra/tools/dep-collector",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

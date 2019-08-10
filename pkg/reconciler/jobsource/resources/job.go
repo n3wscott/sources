@@ -19,7 +19,7 @@ package resources
 import (
 	"fmt"
 
-	"github.com/knative/eventing/pkg/utils"
+	"knative.dev/eventing/pkg/utils"
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	"knative.dev/pkg/kmeta"
 

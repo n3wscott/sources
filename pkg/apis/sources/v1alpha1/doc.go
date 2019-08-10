@@ -14,6 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:deepcopy-gen=package
-// +groupName=sources.knative.dev
+/*
++k8s:deepcopy-gen=package
++groupName=sources.knative.dev
+
+Package v1alpha1 implements Version 1, Alpha 1 of the sources API.
+*/
 package v1alpha1
