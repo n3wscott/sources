@@ -28,6 +28,7 @@ import (
 type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	JobSourcesGetter
+	ServiceSourcesGetter
 }
 
 // SourcesV1alpha1Client is used to interact with features provided by the sources.knative.dev group.
@@ -37,6 +38,10 @@ type SourcesV1alpha1Client struct {
 
 func (c *SourcesV1alpha1Client) JobSources(namespace string) JobSourceInterface {
 	return newJobSources(c, namespace)
+}
+
+func (c *SourcesV1alpha1Client) ServiceSources(namespace string) ServiceSourceInterface {
+	return newServiceSources(c, namespace)
 }
 
 // NewForConfig creates a new SourcesV1alpha1Client for the given config.

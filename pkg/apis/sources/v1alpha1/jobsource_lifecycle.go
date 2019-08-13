@@ -23,10 +23,21 @@ import (
 
 const (
 	jobRunningReason = "Running"
+
+	// JobSourceConditionSucceeded is set when the revision starts to
+	// materialize runtime resources and becomes true when the Job finishes
+	// successfully.
+	JobSourceConditionSucceeded = apis.ConditionSucceeded
+
+	// SinkProvided is inherited from the base status.
+
+	// JobSourceConditionJobSucceeded becomes true when the underlying Job
+	// succeeds.
+	JobSourceConditionJobSucceeded apis.ConditionType = "JobSucceeded"
 )
 
-var condSet = apis.NewBatchConditionSet(
-	JobSourceConditionSinkProvided,
+var jobCondSet = apis.NewBatchConditionSet(
+	SourceConditionSinkProvided,
 	JobSourceConditionJobSucceeded,
 )
 
@@ -36,13 +47,13 @@ func (js *JobSource) GetGroupVersionKind() schema.GroupVersionKind {
 }
 
 func (s *JobSourceStatus) InitializeConditions() {
-	condSet.Manage(s).InitializeConditions()
+	jobCondSet.Manage(s).InitializeConditions()
 }
 
 // Succeeded returns true if the JobSource has succeeded.
 func (s *JobSourceStatus) Succeeded() bool {
 	// This condition set should use apis.ConditionSucceeded (JobSourceConditionSucceeded).
-	return condSet.Manage(s).IsHappy()
+	return jobCondSet.Manage(s).IsHappy()
 }
 
 // MarkSink sets the conditions that the source has received a sink URI.
@@ -57,27 +68,21 @@ func (s *JobSourceStatus) MarkSink(uri string) {
 		return
 	}
 
-	s.SinkURI = uri
-	if len(uri) > 0 {
-		condSet.Manage(s).MarkTrue(JobSourceConditionSinkProvided)
-	} else {
-		condSet.Manage(s).MarkUnknown(JobSourceConditionSinkProvided, "SinkEmpty", "Sink resolved to empty URI")
-	}
+	s.BaseSourceStatus.MarkSink(jobCondSet.Manage(s), uri)
 }
 
-// MarkNoSink sets the condition that the JobSource does not have a sink configured.
 func (s *JobSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
-	condSet.Manage(s).MarkFalse(JobSourceConditionSinkProvided, reason, messageFormat, messageA...)
+	s.BaseSourceStatus.MarkNoSink(jobCondSet.Manage(s), reason, messageFormat, messageA...)
 }
 
 // JobSucceeded returns true if the underlying Job has succeeded.
 func (s *JobSourceStatus) JobSucceeded() bool {
-	return condSet.Manage(s).GetCondition(JobSourceConditionJobSucceeded).IsTrue()
+	return jobCondSet.Manage(s).GetCondition(JobSourceConditionJobSucceeded).IsTrue()
 }
 
 // IsJobRunning returns true if the job is currently running.
 func (s *JobSourceStatus) IsJobRunning() bool {
-	jobsucceeded := condSet.Manage(s).GetCondition(JobSourceConditionJobSucceeded)
+	jobsucceeded := jobCondSet.Manage(s).GetCondition(JobSourceConditionJobSucceeded)
 	if !jobsucceeded.IsUnknown() {
 		// The job's success is known iff if it finished running.
 		return false
@@ -90,15 +95,15 @@ func (s *JobSourceStatus) IsJobRunning() bool {
 
 // MarkJobSucceeded sets the condition that the underlying Job succeeded.
 func (s *JobSourceStatus) MarkJobSucceeded() {
-	condSet.Manage(s).MarkTrue(JobSourceConditionJobSucceeded)
+	jobCondSet.Manage(s).MarkTrue(JobSourceConditionJobSucceeded)
 }
 
 // MarkJobRunning sets the condition of the underlying Job's success to unknown.
 func (s *JobSourceStatus) MarkJobRunning(messageFormat string, messageA ...interface{}) {
-	condSet.Manage(s).MarkUnknown(JobSourceConditionJobSucceeded, jobRunningReason, messageFormat, messageA...)
+	jobCondSet.Manage(s).MarkUnknown(JobSourceConditionJobSucceeded, jobRunningReason, messageFormat, messageA...)
 }
 
 // MarkJobFailed sets the condition that the underlying Job failed.
 func (s *JobSourceStatus) MarkJobFailed(reason, messageFormat string, messageA ...interface{}) {
-	condSet.Manage(s).MarkFalse(JobSourceConditionJobSucceeded, reason, messageFormat, messageA...)
+	jobCondSet.Manage(s).MarkFalse(JobSourceConditionJobSucceeded, reason, messageFormat, messageA...)
 }

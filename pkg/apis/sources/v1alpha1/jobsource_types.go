@@ -18,11 +18,9 @@ package v1alpha1
 
 import (
 	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/pkg/apis"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -52,42 +50,13 @@ var _ kmeta.OwnerRefable = (*JobSource)(nil)
 
 // JobSourceSpec holds the desired state of the JobSource (from the client).
 type JobSourceSpec struct {
+	BaseSourceSpec  `json:",inline"`
 	batchv1.JobSpec `json:",inline"`
-
-	// Sink is a reference to an object that will resolve to URI to send
-	// events to.
-	// +required
-	Sink *corev1.ObjectReference `json:"sink,omitempty"`
-
-	// OutputFormat describes the CloudEvent output format the source
-	// should send events in. All formats are over HTTP.
-	// Defaults to binary.
-	// +optional
-	OutputFormat OutputFormatType `json:"outputFormat,omitempty"`
 }
-
-const (
-	// JobSourceConditionSucceeded is set when the revision starts to
-	// materialize runtime resources and becomes true when the Job finishes
-	// successfully.
-	JobSourceConditionSucceeded = apis.ConditionSucceeded
-
-	// JobSourceConditionSinkProvided becomes true when the Source is
-	// configured with a sink.
-	JobSourceConditionSinkProvided apis.ConditionType = "SinkProvided"
-
-	// JobSourceConditionJobSucceeded becomes true when the underlying Job
-	// succeeds.
-	JobSourceConditionJobSucceeded apis.ConditionType = "JobSucceeded"
-)
 
 // JobSourceStatus communicates the observed state of the JobSource (from the controller).
 type JobSourceStatus struct {
-	duckv1beta1.Status `json:",inline"`
-
-	// SinkURI is the current sink URI configured for the JobSource.
-	// +optional
-	SinkURI string `json:"sinkUri,omitempty"`
+	BaseSourceStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

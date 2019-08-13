@@ -26,10 +26,7 @@ import (
 
 // SetDefaults implements apis.Defaultable
 func (js *JobSource) SetDefaults(ctx context.Context) {
-	// TODO(spencer-p) Document this default
-	if js.Spec.OutputFormat == "" {
-		js.Spec.OutputFormat = OutputFormatBinary
-	}
+	js.Spec.SetDefaults(ctx)
 
 	// Use the documented default for the embedded JobSpec.
 	// See k8s.io/api/batch/v1.JobSpec.BackoffLimit.
