@@ -50,11 +50,11 @@ var (
 func TestServiceSourceValidation(t *testing.T) {
 	tests := []struct {
 		name string
-		js   *ServiceSource
+		s    *ServiceSource
 		want string
 	}{{
 		name: "all perfect",
-		js: &ServiceSource{Spec: ServiceSourceSpec{
+		s: &ServiceSource{Spec: ServiceSourceSpec{
 			BaseSourceSpec: BaseSourceSpec{
 				OutputFormat: OutputFormatBinary,
 				Sink: &corev1.ObjectReference{
@@ -69,7 +69,7 @@ func TestServiceSourceValidation(t *testing.T) {
 		want: ``,
 	}, {
 		name: "missing service spec",
-		js: &ServiceSource{Spec: ServiceSourceSpec{
+		s: &ServiceSource{Spec: ServiceSourceSpec{
 			BaseSourceSpec: BaseSourceSpec{
 				OutputFormat: OutputFormatBinary,
 				Sink: &corev1.ObjectReference{
@@ -83,7 +83,7 @@ func TestServiceSourceValidation(t *testing.T) {
 		want: (&servingv1beta1.ServiceSpec{}).Validate(context.Background()).ViaField("spec").Error(),
 	}, {
 		name: "bad sink shows up in spec field",
-		js: &ServiceSource{Spec: ServiceSourceSpec{
+		s: &ServiceSource{Spec: ServiceSourceSpec{
 			BaseSourceSpec: BaseSourceSpec{
 				OutputFormat: OutputFormatBinary,
 				Sink: &corev1.ObjectReference{
@@ -97,7 +97,7 @@ func TestServiceSourceValidation(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			errs := test.js.Validate(context.Background())
+			errs := test.s.Validate(context.Background())
 			if got := errs.Error(); got != test.want {
 				t.Errorf("Validate() = %q, wanted %q", got, test.want)
 			}
