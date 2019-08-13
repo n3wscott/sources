@@ -1205,7 +1205,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f2debf8e777276b61a457f5b5790bf52a16f5a5db59721e0679d32d730b7a649"
+  digest = "1:dbd3bf01f267e15f680366b3fff6147f0bcedd733ae774997484f1bbb18cbdf1"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1217,6 +1217,7 @@
     "apis/istio/authentication/v1alpha1",
     "apis/istio/common/v1alpha1",
     "apis/istio/v1alpha3",
+    "apis/v1alpha1",
     "changeset",
     "client/clientset/versioned",
     "client/clientset/versioned/fake",
@@ -1257,7 +1258,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "53034608f64e82c8e892d46197f687edb6f78b93"
+  revision = "11fec633e4e3b3e25b7e59f835fec4b0f382469a"
 
 [[projects]]
   digest = "1:d65c29c496ee785c0874a1b385e40cab0510d8e2a8a5c1dc838bac85bb9ec28e"
@@ -1368,7 +1369,9 @@
     "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/utils",
     "knative.dev/pkg/apis",
+    "knative.dev/pkg/apis/duck",
     "knative.dev/pkg/apis/duck/v1beta1",
+    "knative.dev/pkg/apis/v1alpha1",
     "knative.dev/pkg/client/clientset/versioned/fake",
     "knative.dev/pkg/codegen/cmd/injection-gen",
     "knative.dev/pkg/configmap",

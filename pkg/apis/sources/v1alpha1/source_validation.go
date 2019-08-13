@@ -32,7 +32,7 @@ func (s *BaseSourceSpec) Validate(ctx context.Context) *apis.FieldError {
 	errs = errs.Also(s.OutputFormat.Validate(ctx))
 
 	// The Sink ObjectReference must be okay
-	errs = errs.Also(validateRef(s.Sink).ViaField("sink"))
+	errs = errs.Also(s.Sink.Validate(ctx).ViaField("sink"))
 
 	return errs
 }
