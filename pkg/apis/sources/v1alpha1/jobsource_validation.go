@@ -19,46 +19,11 @@ package v1alpha1
 import (
 	"context"
 
-	corev1 "k8s.io/api/core/v1"
-
 	"knative.dev/pkg/apis"
 )
 
 // Validate implements apis.Validatable
 func (js *JobSource) Validate(ctx context.Context) *apis.FieldError {
 	return js.Spec.Validate(ctx).ViaField("spec")
-}
-
-// Validate implements apis.Validatable
-func (jss *JobSourceSpec) Validate(ctx context.Context) *apis.FieldError {
-	var errs *apis.FieldError
-
-	// OutputFormat must be one of the two types
-	errs = errs.Also(jss.OutputFormat.Validate(ctx))
-
-	// The Sink ObjectReference must be okay
-	errs = errs.Also(validateRef(jss.Sink).ViaField("sink"))
-
-	return errs
-}
-
-func validateRef(ref *corev1.ObjectReference) *apis.FieldError {
-	// nil check.
-	if ref == nil {
-		return apis.ErrMissingField(apis.CurrentField)
-	}
-	// Check the object.
-	var errs *apis.FieldError
-	// Required Fields
-	if ref.Name == "" {
-		errs = errs.Also(apis.ErrMissingField("name"))
-	}
-	if ref.APIVersion == "" {
-		errs = errs.Also(apis.ErrMissingField("apiVersion"))
-	}
-	if ref.Kind == "" {
-		errs = errs.Also(apis.ErrMissingField("kind"))
-	}
-
-	return errs
+	// TODO(spencer-p) Verify the Job spec -- k8s does not provide a method for this
 }

@@ -25,3 +25,11 @@ type JobSourceListerExpansion interface{}
 // JobSourceNamespaceListerExpansion allows custom methods to be added to
 // JobSourceNamespaceLister.
 type JobSourceNamespaceListerExpansion interface{}
+
+// ServiceSourceListerExpansion allows custom methods to be added to
+// ServiceSourceLister.
+type ServiceSourceListerExpansion interface{}
+
+// ServiceSourceNamespaceListerExpansion allows custom methods to be added to
+// ServiceSourceNamespaceLister.
+type ServiceSourceNamespaceListerExpansion interface{}

@@ -241,6 +241,13 @@
   revision = "6f77996f0c42f7b84e5a2b252227263f93432e9b"
 
 [[projects]]
+  digest = "1:7915c656a10819b240db94ffd6afc6a621af4687db735341d9919668750485ec"
+  name = "github.com/google/go-containerregistry"
+  packages = ["pkg/name"]
+  pruneopts = "NUT"
+  revision = "abf9ef06abd9f532944e28e8942644ea4b710a40"
+
+[[projects]]
   digest = "1:52c5834e2bebac9030c97cc0798ac11c3aa8a39f098aeb419f142533da6cd3cc"
   name = "github.com/google/gofuzz"
   packages = ["."]
@@ -577,13 +584,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7d50c06032a6fd1f8473a0bc63f478f862ea63a07228571c3b72fd28e6cc6758"
+  digest = "1:b4e5a3f0688e6c985bdbdf02125ee249c1ecc733e7681fc582f14c21ce4649a0"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
     "http/httpguts",
     "http2",
+    "http2/h2c",
     "http2/hpack",
     "idna",
     "internal/timeseries",
@@ -1252,6 +1260,23 @@
   revision = "53034608f64e82c8e892d46197f687edb6f78b93"
 
 [[projects]]
+  digest = "1:d65c29c496ee785c0874a1b385e40cab0510d8e2a8a5c1dc838bac85bb9ec28e"
+  name = "knative.dev/serving"
+  packages = [
+    "pkg/apis/autoscaling",
+    "pkg/apis/config",
+    "pkg/apis/networking",
+    "pkg/apis/serving",
+    "pkg/apis/serving/v1beta1",
+    "pkg/gc",
+    "pkg/network",
+    "pkg/reconciler/route/config",
+  ]
+  pruneopts = "NUT"
+  revision = "3f73b117b61ee5d8fe5dcedd6cca2c96014329a9"
+  version = "v0.8.0"
+
+[[projects]]
   branch = "master"
   digest = "1:c5fcddf864b41dd694b4348b06406904ba8b2e403a3a1bb1a565104beb2b4092"
   name = "knative.dev/test-infra"
@@ -1364,6 +1389,7 @@
     "knative.dev/pkg/tracing",
     "knative.dev/pkg/version",
     "knative.dev/pkg/webhook",
+    "knative.dev/serving/pkg/apis/serving/v1beta1",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
   ]

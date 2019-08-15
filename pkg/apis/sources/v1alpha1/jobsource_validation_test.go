@@ -29,69 +29,34 @@ func TestJobSourceValidation(t *testing.T) {
 		js   *JobSource
 		want string
 	}{{
-		name: "all zeroes",
-		js:   &JobSource{},
-		want: `missing field(s): spec.outputFormat, spec.sink`,
-	}, {
 		name: "all perfect",
-		js: &JobSource{Spec: JobSourceSpec{
+		js: &JobSource{Spec: JobSourceSpec{BaseSourceSpec: BaseSourceSpec{
 			OutputFormat: OutputFormatBinary,
 			Sink: &corev1.ObjectReference{
 				// None of these fields have to be meaningful
 				Name:       "Steve",
 				APIVersion: "42",
 				Kind:       "Service",
-			},
+			}},
 		}},
 		want: ``,
 	}, {
-		name: "no sink name",
-		js: &JobSource{Spec: JobSourceSpec{
+		name: "bad sink shows up in spec field",
+		js: &JobSource{Spec: JobSourceSpec{BaseSourceSpec: BaseSourceSpec{
 			OutputFormat: OutputFormatBinary,
 			Sink: &corev1.ObjectReference{
 				APIVersion: "42",
 				Kind:       "Service",
-			},
+			}},
 		}},
 		want: `missing field(s): spec.sink.name`,
-	}, {
-		name: "missing sink api version",
-		js: &JobSource{Spec: JobSourceSpec{
-			OutputFormat: OutputFormatBinary,
-			Sink: &corev1.ObjectReference{
-				Name: "Steve",
-				Kind: "Service",
-			},
-		}},
-		want: `missing field(s): spec.sink.apiVersion`,
-	}, {
-		name: "missing sink kind",
-		js: &JobSource{Spec: JobSourceSpec{
-			OutputFormat: OutputFormatBinary,
-			Sink: &corev1.ObjectReference{
-				Name:       "Steve",
-				APIVersion: "42",
-			},
-		}},
-		want: `missing field(s): spec.sink.kind`,
-	}, {
-		name: "invalid outputformat",
-		js: &JobSource{Spec: JobSourceSpec{
-			OutputFormat: "messenger_pigeon",
-			Sink: &corev1.ObjectReference{
-				Name:       "Steve",
-				APIVersion: "42",
-				Kind:       "Service",
-			},
-		}},
-		want: `invalid value: messenger_pigeon: spec.outputFormat`,
 	}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			errs := test.js.Validate(context.Background())
 			if got := errs.Error(); got != test.want {
-				t.Errorf("%s: JobSource.Validate() = '%s', wanted '%s'", test.name, got, test.want)
+				t.Errorf("Validate() = %q, wanted %q", got, test.want)
 			}
 		})
 	}

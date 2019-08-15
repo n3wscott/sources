@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// JobSources returns a JobSourceInformer.
 	JobSources() JobSourceInformer
+	// ServiceSources returns a ServiceSourceInformer.
+	ServiceSources() ServiceSourceInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // JobSources returns a JobSourceInformer.
 func (v *version) JobSources() JobSourceInformer {
 	return &jobSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ServiceSources returns a ServiceSourceInformer.
+func (v *version) ServiceSources() ServiceSourceInformer {
+	return &serviceSourceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

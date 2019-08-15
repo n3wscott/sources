@@ -32,6 +32,10 @@ func (c *FakeSourcesV1alpha1) JobSources(namespace string) v1alpha1.JobSourceInt
 	return &FakeJobSources{c, namespace}
 }
 
+func (c *FakeSourcesV1alpha1) ServiceSources(namespace string) v1alpha1.ServiceSourceInterface {
+	return &FakeServiceSources{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeSourcesV1alpha1) RESTClient() rest.Interface {
