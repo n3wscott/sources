@@ -2,6 +2,7 @@ package jobsource
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
@@ -14,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 
@@ -34,18 +36,35 @@ const (
 	failmessage = "fail message"
 )
 
+var (
+	svcSink = destMust(apisv1alpha1.NewDestination(&corev1.ObjectReference{
+		Name:       sinkName,
+		Namespace:  ns,
+		APIVersion: "v1",
+		Kind:       "Service",
+	}))
+)
+
+func namedTestSink(name string) apisv1alpha1.Destination {
+	return destMust(apisv1alpha1.NewDestination(&corev1.ObjectReference{
+		Name:       name,
+		Namespace:  ns,
+		APIVersion: "testing.eventing.knative.dev/v1alpha1",
+		Kind:       "Sink",
+	}))
+}
+
 func init() {
 	// Add types to scheme
 	_ = v1alpha1.AddToScheme(scheme.Scheme)
 }
 
-func newSink() *corev1.ObjectReference {
-	return &corev1.ObjectReference{
-		Name:       sinkName,
-		Namespace:  ns,
-		APIVersion: "v1",
-		Kind:       "Service",
+// destMust eats errors related to destination creation, which should not happen for our known test inputs.
+func destMust(dest *apisv1alpha1.Destination, err error) apisv1alpha1.Destination {
+	if err != nil {
+		panic(fmt.Errorf("destination construction should not error: %v", err))
 	}
+	return *dest
 }
 
 func newUnstructuredSink(scheme, hostname string) *unstructured.Unstructured {
@@ -59,8 +78,7 @@ func newUnstructuredSink(scheme, hostname string) *unstructured.Unstructured {
 			},
 			"status": map[string]interface{}{
 				"address": map[string]interface{}{
-					"hostname": hostname,
-					"scheme":   scheme,
+					"url": scheme + "://" + hostname,
 				},
 			},
 		},
@@ -95,7 +113,7 @@ func TestJobSource(t *testing.T) {
 			}),
 		}},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "UpdateFailed", "Failed to update status for %q: missing field(s): spec.sink", jsName),
+			Eventf(corev1.EventTypeWarning, "UpdateFailed", "Failed to update status for %q: expected exactly one, got neither: spec.sink.uri, spec.sink[apiVersion, kind, name]", jsName),
 		},
 	}, {
 		Name: "sink not existing causes errors",
@@ -103,12 +121,7 @@ func TestJobSource(t *testing.T) {
 			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
-				js.Spec.Sink = &corev1.ObjectReference{
-					Name:       "sink-that-does-not-exist",
-					Namespace:  ns,
-					APIVersion: "testing.eventing.knative.dev/v1alpha1",
-					Kind:       "Sink",
-				}
+				js.Spec.Sink = namedTestSink("dne") // does not exist
 			}),
 			// Sink not added to objects
 		},
@@ -117,19 +130,17 @@ func TestJobSource(t *testing.T) {
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
-				js.Spec.Sink = &corev1.ObjectReference{
-					Name:       "sink-that-does-not-exist",
-					Namespace:  ns,
-					APIVersion: "testing.eventing.knative.dev/v1alpha1",
-					Kind:       "Sink",
-				}
+				js.Spec.Sink = namedTestSink("dne")
 
 				js.Status.InitializeConditions()
-				js.Status.MarkNoSink("NotFound", `Could not get sink URI from default/sink-that-does-not-exist: Error fetching sink &ObjectReference{Kind:Sink,Namespace:default,Name:sink-that-does-not-exist,UID:,APIVersion:testing.eventing.knative.dev/v1alpha1,ResourceVersion:,FieldPath:,} for source "default/my-jobsource, /, Kind=": sinks.testing.eventing.knative.dev "sink-that-does-not-exist" not found`)
+				js.Status.MarkNoSink("NotFound", `Could not get sink URI from %s/%s: failed to get ref %+v: sinks.testing.eventing.knative.dev "dne" not found`,
+					js.Spec.Sink.ObjectReference.Namespace,
+					js.Spec.Sink.ObjectReference.Name,
+					js.Spec.Sink)
 			}),
 		}},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "InternalError", `Error fetching sink &ObjectReference{Kind:Sink,Namespace:default,Name:sink-that-does-not-exist,UID:,APIVersion:testing.eventing.knative.dev/v1alpha1,ResourceVersion:,FieldPath:,} for source "default/my-jobsource, /, Kind=": sinks.testing.eventing.knative.dev "sink-that-does-not-exist" not found`),
+			Eventf(corev1.EventTypeWarning, "InternalError", `failed to get ref %+v: sinks.testing.eventing.knative.dev "dne" not found`, namedTestSink("dne")),
 		},
 	}, {
 		Name: "sink with bad address causes errors",
@@ -137,35 +148,30 @@ func TestJobSource(t *testing.T) {
 			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
-				js.Spec.Sink = &corev1.ObjectReference{
-					Name:       sinkName,
-					Namespace:  ns,
-					APIVersion: "testing.eventing.knative.dev/v1alpha1",
-					Kind:       "Sink",
-				}
+				js.Spec.Sink = namedTestSink(sinkName)
 			}),
 			// The sink we are referencing here has an empty host, which should be erroneous.
-			// This will actually result in a lookup fail.
-			newUnstructuredSink("messenger_pigeon", ""),
+			// This will result in a lookup fail.
+			newUnstructuredSink("messengerpigeon", ""),
 		},
 		Key:     key,
 		WantErr: true,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
-				js.Spec.Sink = &corev1.ObjectReference{
+				js.Spec.Sink = destMust(apisv1alpha1.NewDestination(&corev1.ObjectReference{
 					Name:       sinkName,
 					Namespace:  ns,
 					APIVersion: "testing.eventing.knative.dev/v1alpha1",
 					Kind:       "Sink",
-				}
+				}))
 
 				js.Status.InitializeConditions()
-				js.Status.MarkNoSink("NotFound", `Could not get sink URI from default/my-sink: sink &ObjectReference{Kind:Sink,Namespace:default,Name:my-sink,UID:,APIVersion:testing.eventing.knative.dev/v1alpha1,ResourceVersion:,FieldPath:,} contains an empty hostname`)
+				js.Status.MarkNoSink("NotFound", fmt.Sprintf(`Could not get sink URI from default/my-sink: missing hostname in address of %+v`, namedTestSink(sinkName)))
 			}),
 		}},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "InternalError", `sink &ObjectReference{Kind:Sink,Namespace:default,Name:my-sink,UID:,APIVersion:testing.eventing.knative.dev/v1alpha1,ResourceVersion:,FieldPath:,} contains an empty hostname`),
+			Eventf(corev1.EventTypeWarning, "InternalError", `missing hostname in address of %+v`, namedTestSink(sinkName)),
 		},
 	}, {
 		Name: "having sink starts a job",
@@ -173,14 +179,14 @@ func TestJobSource(t *testing.T) {
 			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
+				js.Spec.Sink = svcSink
 			}),
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
-				js.Spec.Sink = newSink()
+				js.Spec.Sink = svcSink
 
 				js.Status.InitializeConditions()
 				js.Status.MarkSink(sinkURI)
@@ -190,7 +196,7 @@ func TestJobSource(t *testing.T) {
 		WantCreates: []runtime.Object{resources.MakeJob(
 			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
-				js.Spec.Sink = newSink()
+				js.Spec.Sink = svcSink
 			}),
 		)},
 	}, {
@@ -198,15 +204,15 @@ func TestJobSource(t *testing.T) {
 		Objects: []runtime.Object{
 			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
+				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
 				js.Status.MarkSink(sinkURI)
 				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
 			}),
 			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
+				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
 				js.Status.MarkSink(sinkURI)
 			}), func(job *batchv1.Job) {
 				// Mark the job as completed.  If this test
@@ -223,10 +229,9 @@ func TestJobSource(t *testing.T) {
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
-				js.Spec.Sink = newSink()
+				js.Spec.Sink = svcSink
 
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
 				js.Status.MarkSink(sinkURI)
 				js.Status.MarkJobSucceeded()
 			}),
@@ -236,15 +241,15 @@ func TestJobSource(t *testing.T) {
 		Objects: []runtime.Object{
 			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
+				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
 				js.Status.MarkSink(sinkURI)
 				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
 			}),
 			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
+				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
 				js.Status.MarkSink(sinkURI)
 			}), func(job *batchv1.Job) {
 				// Mark the job as failed.
@@ -261,10 +266,9 @@ func TestJobSource(t *testing.T) {
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
-				js.Spec.Sink = newSink()
+				js.Spec.Sink = svcSink
 
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
 				js.Status.MarkSink(sinkURI)
 				js.Status.MarkJobFailed(failreason, failmessage)
 			}),
@@ -274,14 +278,14 @@ func TestJobSource(t *testing.T) {
 		Objects: []runtime.Object{
 			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
+				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
 				js.Status.MarkSink(sinkURI)
 			}),
 			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
+				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
 				js.Status.MarkSink(sinkURI)
 			}), func(job *batchv1.Job) {}),
 		},
@@ -289,10 +293,9 @@ func TestJobSource(t *testing.T) {
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
 			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
-				js.Spec.Sink = newSink()
+				js.Spec.Sink = svcSink
 
 				js.Status.InitializeConditions()
-				js.Spec.Sink = newSink()
 				js.Status.MarkSink(sinkURI)
 				js.Status.MarkJobRunning("Job %q already exists.", jsJobFixedName)
 			}),
@@ -303,24 +306,24 @@ func TestJobSource(t *testing.T) {
 			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
-				js.Spec.Sink = &corev1.ObjectReference{
+				js.Spec.Sink = destMust(apisv1alpha1.NewDestination(&corev1.ObjectReference{
 					Name:       sinkName,
 					Namespace:  ns,
 					APIVersion: "testing.eventing.knative.dev/v1alpha1",
 					Kind:       "Sink",
-				}
+				}))
 				js.Status.MarkSink(sinkURI)
 				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
 			}),
 			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
-				js.Spec.Sink = &corev1.ObjectReference{
+				js.Spec.Sink = destMust(apisv1alpha1.NewDestination(&corev1.ObjectReference{
 					Name:       sinkName,
 					Namespace:  ns,
 					APIVersion: "testing.eventing.knative.dev/v1alpha1",
 					Kind:       "Sink",
-				}
+				}))
 				js.Status.MarkSink(sinkURI)
 			}), func(job *batchv1.Job) {}),
 

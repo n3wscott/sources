@@ -19,11 +19,11 @@ package reconciler
 import (
 	"context"
 
-	"knative.dev/eventing/pkg/duck"
-	eventingreconciler "knative.dev/eventing/pkg/reconciler"
 	clientset "github.com/n3wscott/sources/pkg/client/clientset/versioned"
 	sourcesclient "github.com/n3wscott/sources/pkg/client/injection/client"
+	eventingreconciler "knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/resolver"
 )
 
 // Base is a set of tools that source reconcilers need.
@@ -38,7 +38,7 @@ type Base struct {
 
 	// Used by all Sources to resolve their sink.
 	// +required
-	SinkReconciler *duck.SinkReconciler
+	SinkResolver *resolver.URIResolver
 }
 
 func NewBase(ctx context.Context, controllerAgentName string, cmw configmap.Watcher) *Base {
@@ -46,10 +46,10 @@ func NewBase(ctx context.Context, controllerAgentName string, cmw configmap.Watc
 
 	base.SourcesClientSet = sourcesclient.Get(ctx)
 
-	// TODO(spencer-p) This callback is a joke.
+	// TODO(spencer-p) This callback is a nop and should be changed.
 	// impl := controller.NewImpl(r, logger, controllerAgentName)
-	// r.sinkReconciler = duck.NewSinkReconciler(ctx, impl.EnqueueKey)
-	base.SinkReconciler = duck.NewSinkReconciler(ctx, func(_ string) {})
+	// r.sinkReconciler = resolver.NewURIResolver(ctx, impl.EnqueueKey)
+	base.SinkResolver = resolver.NewURIResolver(ctx, func(_ string) {})
 
 	return base
 }

@@ -169,20 +169,21 @@ func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) e
 
 // reconcileSink attempts to reconcile the sink object reference to a URI and set the sink in the JobSourceStatus.
 func (r *Reconciler) reconcileSink(ctx context.Context, js *v1alpha1.JobSource) error {
-	if js.Spec.Sink == nil {
+	if js.Spec.Sink.ObjectReference == nil && js.Spec.Sink.URI == nil {
 		js.Status.MarkNoSink("Missing", "Sink missing from spec")
 		return errSinkMissing
 	}
 
-	ref := js.Spec.Sink
-	if ref.Namespace == "" {
-		ref.Namespace = js.Namespace
+	dest := js.Spec.Sink
+
+	// If using the ObjectReference w/o a namespace, mirror the source's ns
+	if dest.ObjectReference != nil && dest.ObjectReference.Namespace == "" {
+		dest.ObjectReference.Namespace = js.Namespace
 	}
 
-	desc := fmt.Sprintf("%s/%s, %s", js.Namespace, js.Name, js.GroupVersionKind().String())
-	uri, err := r.SinkReconciler.GetSinkURI(ref, js, desc)
+	uri, err := r.SinkResolver.URIFromDestination(dest, js)
 	if err != nil {
-		js.Status.MarkNoSink("NotFound", "Could not get sink URI from %s/%s: %v", ref.Namespace, ref.Name, err)
+		js.Status.MarkNoSink("NotFound", "Could not get sink URI from %s/%s: %v", dest.ObjectReference.Namespace, dest.ObjectReference.Name, err)
 		return err
 	}
 
