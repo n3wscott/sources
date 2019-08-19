@@ -183,7 +183,7 @@ func (r *Reconciler) reconcileSink(ctx context.Context, js *v1alpha1.JobSource) 
 
 	uri, err := r.SinkResolver.URIFromDestination(dest, js)
 	if err != nil {
-		js.Status.MarkNoSink("NotFound", "Could not get sink URI from %s/%s: %v", dest.ObjectReference.Namespace, dest.ObjectReference.Name, err)
+		js.Status.MarkNoSink("NotFound", "Could not resolve sink URI: %v", err)
 		return err
 	}
 
