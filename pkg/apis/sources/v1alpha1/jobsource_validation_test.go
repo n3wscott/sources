@@ -20,6 +20,8 @@ import (
 	"context"
 	"testing"
 
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -32,23 +34,23 @@ func TestJobSourceValidation(t *testing.T) {
 		name: "all perfect",
 		js: &JobSource{Spec: JobSourceSpec{BaseSourceSpec: BaseSourceSpec{
 			OutputFormat: OutputFormatBinary,
-			Sink: &corev1.ObjectReference{
+			Sink: apisv1alpha1.Destination{ObjectReference: &corev1.ObjectReference{
 				// None of these fields have to be meaningful
 				Name:       "Steve",
 				APIVersion: "42",
 				Kind:       "Service",
 			}},
-		}},
+		}}},
 		want: ``,
 	}, {
 		name: "bad sink shows up in spec field",
 		js: &JobSource{Spec: JobSourceSpec{BaseSourceSpec: BaseSourceSpec{
 			OutputFormat: OutputFormatBinary,
-			Sink: &corev1.ObjectReference{
+			Sink: apisv1alpha1.Destination{ObjectReference: &corev1.ObjectReference{
 				APIVersion: "42",
 				Kind:       "Service",
 			}},
-		}},
+		}}},
 		want: `missing field(s): spec.sink.name`,
 	}}
 

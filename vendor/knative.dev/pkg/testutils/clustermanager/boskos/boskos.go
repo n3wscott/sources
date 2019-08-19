@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Knative Authors.
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,23 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package boskos
 
-import (
-	"context"
+// AcquireGKEProject acquires GKE Boskos Project
+func AcquireGKEProject() (string, error) {
+	// TODO: implement the logic
+	return "", nil
+}
 
-	"knative.dev/pkg/apis"
-)
-
-// Validate implements apis.Validatable
-func (s *BaseSourceSpec) Validate(ctx context.Context) *apis.FieldError {
-	var errs *apis.FieldError
-
-	// OutputFormat must be one of the two types
-	errs = errs.Also(s.OutputFormat.Validate(ctx))
-
-	// The Sink ObjectReference must be okay
-	errs = errs.Also(s.Sink.Validate(ctx).ViaField("sink"))
-
-	return errs
+// ReleaseGKEProject releases project
+func ReleaseGKEProject(name string) error {
+	// TODO: implement the logic
+	return nil
 }

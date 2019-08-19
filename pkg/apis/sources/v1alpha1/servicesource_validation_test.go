@@ -20,6 +20,7 @@ import (
 	"context"
 	"testing"
 
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 
 	corev1 "k8s.io/api/core/v1"
@@ -57,12 +58,12 @@ func TestServiceSourceValidation(t *testing.T) {
 		s: &ServiceSource{Spec: ServiceSourceSpec{
 			BaseSourceSpec: BaseSourceSpec{
 				OutputFormat: OutputFormatBinary,
-				Sink: &corev1.ObjectReference{
+				Sink: apisv1alpha1.Destination{ObjectReference: &corev1.ObjectReference{
 					// None of these fields have to be meaningful
 					Name:       "Steve",
 					APIVersion: "42",
 					Kind:       "Service",
-				},
+				}},
 			},
 			ServiceSpec: minServiceSpec,
 		}},
@@ -72,12 +73,11 @@ func TestServiceSourceValidation(t *testing.T) {
 		s: &ServiceSource{Spec: ServiceSourceSpec{
 			BaseSourceSpec: BaseSourceSpec{
 				OutputFormat: OutputFormatBinary,
-				Sink: &corev1.ObjectReference{
-					// None of these fields have to be meaningful
+				Sink: apisv1alpha1.Destination{ObjectReference: &corev1.ObjectReference{
 					Name:       "Steve",
 					APIVersion: "42",
 					Kind:       "Service",
-				},
+				}},
 			},
 		}},
 		want: (&servingv1beta1.ServiceSpec{}).Validate(context.Background()).ViaField("spec").Error(),
@@ -86,10 +86,11 @@ func TestServiceSourceValidation(t *testing.T) {
 		s: &ServiceSource{Spec: ServiceSourceSpec{
 			BaseSourceSpec: BaseSourceSpec{
 				OutputFormat: OutputFormatBinary,
-				Sink: &corev1.ObjectReference{
+				Sink: apisv1alpha1.Destination{ObjectReference: &corev1.ObjectReference{
 					APIVersion: "42",
 					Kind:       "Service",
 				}},
+			},
 			ServiceSpec: minServiceSpec,
 		}},
 		want: `missing field(s): spec.sink.name`,

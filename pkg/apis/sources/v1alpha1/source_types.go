@@ -17,10 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
-
 	"knative.dev/pkg/apis"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 )
 
 // BaseSourceSpec provides spec components that all sources share. It does not include any
@@ -28,13 +27,19 @@ import (
 type BaseSourceSpec struct {
 	// Sink is a reference to an object that will resolve to a URI to send events to.
 	// +required
-	Sink *corev1.ObjectReference `json:"sink,omitempty"`
+	Sink apisv1alpha1.Destination `json:"sink,omitempty"`
 
 	// OutputFormat describes the CloudEvent output format the source should send events in.
 	// All formats are over HTTP.
 	// Defaults to binary.
 	// +optional
 	OutputFormat OutputFormatType `json:"outputFormat,omitempty"`
+
+	// CloudEventOverrides defines overrides to control the output format and
+	// modifications of the event sent to the sink.
+	// +optional
+	// TODO(n3wscott) This is a stub; currently unused.
+	CloudEventOverrides *duckv1beta1.CloudEventOverrides `json:"ceOverrides,omitempty"`
 }
 
 // BaseSourceStatus holds status information that sources need. This base will not necessarily need
