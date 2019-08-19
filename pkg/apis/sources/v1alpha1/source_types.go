@@ -28,7 +28,6 @@ type BaseSourceSpec struct {
 	// Sink is a reference to an object that will resolve to a URI to send events to.
 	// +required
 	Sink apisv1alpha1.Destination `json:"sink,omitempty"`
-	//Sink *corev1.ObjectReference `json:"sink,omitempty"`
 
 	// OutputFormat describes the CloudEvent output format the source should send events in.
 	// All formats are over HTTP.

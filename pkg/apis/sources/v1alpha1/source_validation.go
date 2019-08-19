@@ -19,8 +19,6 @@ package v1alpha1
 import (
 	"context"
 
-	corev1 "k8s.io/api/core/v1"
-
 	"knative.dev/pkg/apis"
 )
 
@@ -33,27 +31,6 @@ func (s *BaseSourceSpec) Validate(ctx context.Context) *apis.FieldError {
 
 	// The Sink ObjectReference must be okay
 	errs = errs.Also(s.Sink.Validate(ctx).ViaField("sink"))
-
-	return errs
-}
-
-func validateRef(ref *corev1.ObjectReference) *apis.FieldError {
-	// nil check.
-	if ref == nil {
-		return apis.ErrMissingField(apis.CurrentField)
-	}
-	// Check the object.
-	var errs *apis.FieldError
-	// Required Fields
-	if ref.Name == "" {
-		errs = errs.Also(apis.ErrMissingField("name"))
-	}
-	if ref.APIVersion == "" {
-		errs = errs.Also(apis.ErrMissingField("apiVersion"))
-	}
-	if ref.Kind == "" {
-		errs = errs.Also(apis.ErrMissingField("kind"))
-	}
 
 	return errs
 }
