@@ -20,6 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/pkg/apis"
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 	"knative.dev/pkg/kmeta"
 	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 )
@@ -67,4 +68,12 @@ type ServiceSourceList struct {
 	metav1.ListMeta `json:"metadata"`
 
 	Items []ServiceSource `json:"items"`
+}
+
+func (s *ServiceSource) GetSink() apisv1alpha1.Destination {
+	return s.Spec.Sink
+}
+
+func (s *ServiceSource) GetStatus() SourceStatus {
+	return &s.Status
 }

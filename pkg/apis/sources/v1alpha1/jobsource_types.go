@@ -21,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/pkg/apis"
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -67,4 +68,12 @@ type JobSourceList struct {
 	metav1.ListMeta `json:"metadata"`
 
 	Items []JobSource `json:"items"`
+}
+
+func (s *JobSource) GetSink() apisv1alpha1.Destination {
+	return s.Spec.Sink
+}
+
+func (s *JobSource) GetStatus() SourceStatus {
+	return &s.Status
 }

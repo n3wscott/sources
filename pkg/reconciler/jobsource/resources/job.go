@@ -19,8 +19,8 @@ package resources
 import (
 	"fmt"
 
-	"knative.dev/eventing/pkg/utils"
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
+	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/kmeta"
 
 	batchv1 "k8s.io/api/batch/v1"

@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"knative.dev/pkg/apis"
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
@@ -58,3 +60,19 @@ const (
 	// source is configured with a sink.
 	SourceConditionSinkProvided apis.ConditionType = "SinkProvided"
 )
+
+// SourceStatus describes a status that has a sink condition.
+// Sources should have a Status member that satisfies this interface.
+// BaseSourceStatus provides methods to help satisfy this interface.
+type SourceStatus interface {
+	MarkSink(uri string)
+	MarkNoSink(reason, messageFormat string, messageA ...interface{})
+}
+
+// Source describes a general source that one can reason about without knowing implementation details.
+type Source interface {
+	metav1.Object
+
+	GetSink() apisv1alpha1.Destination
+	GetStatus() SourceStatus
+}

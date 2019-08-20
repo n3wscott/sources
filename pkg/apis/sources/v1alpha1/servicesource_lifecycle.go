@@ -62,8 +62,8 @@ func (s *ServiceSourceStatus) MarkServiceReady() {
 	serviceSourceCondSet.Manage(s).MarkTrue(ServiceSourceConditionServiceReady)
 }
 
-func (s *ServiceSourceStatus) MarkServiceReadyUnknown(messageFormat string, messageA ...interface{}) {
-	serviceSourceCondSet.Manage(s).MarkUnknown(ServiceSourceConditionServiceReady, jobRunningReason, messageFormat, messageA...)
+func (s *ServiceSourceStatus) MarkServiceReadyUnknown(reason string, messageFormat string, messageA ...interface{}) {
+	serviceSourceCondSet.Manage(s).MarkUnknown(ServiceSourceConditionServiceReady, reason, messageFormat, messageA...)
 }
 
 func (s *ServiceSourceStatus) MarkServiceNotReady(reason, messageFormat string, messageA ...interface{}) {
