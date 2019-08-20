@@ -133,7 +133,8 @@ func SharedMain(handlers map[schema.GroupVersionKind]webhook.GenericCRD, factori
 
 func main() {
 	handlers := map[schema.GroupVersionKind]webhook.GenericCRD{
-		v1alpha1.SchemeGroupVersion.WithKind("JobSource"): &v1alpha1.JobSource{},
+		v1alpha1.SchemeGroupVersion.WithKind("JobSource"):     &v1alpha1.JobSource{},
+		v1alpha1.SchemeGroupVersion.WithKind("ServiceSource"): &v1alpha1.ServiceSource{},
 	}
 	SharedMain(handlers)
 
