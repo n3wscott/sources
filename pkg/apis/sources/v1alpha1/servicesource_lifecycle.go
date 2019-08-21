@@ -29,6 +29,9 @@ const (
 	// ServiceSourceConditionReady is the happy condition for a service source, true if there is
 	// a ready service with a properly configured sink.
 	ServiceSourceConditionReady = apis.ConditionReady
+
+	serviceDeployingReason  = "Deploying"
+	serviceDeployingMessage = "Service created; awaiting readiness"
 )
 
 var serviceSourceCondSet = apis.NewLivingConditionSet(
@@ -64,6 +67,10 @@ func (s *ServiceSourceStatus) MarkServiceReady() {
 
 func (s *ServiceSourceStatus) MarkServiceReadyUnknown(reason string, messageFormat string, messageA ...interface{}) {
 	serviceSourceCondSet.Manage(s).MarkUnknown(ServiceSourceConditionServiceReady, reason, messageFormat, messageA...)
+}
+
+func (s *ServiceSourceStatus) MarkServiceDeploying() {
+	serviceSourceCondSet.Manage(s).MarkUnknown(ServiceSourceConditionServiceReady, serviceDeployingReason, serviceDeployingMessage)
 }
 
 func (s *ServiceSourceStatus) MarkServiceNotReady(reason, messageFormat string, messageA ...interface{}) {

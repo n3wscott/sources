@@ -23,6 +23,7 @@ import (
 	"github.com/n3wscott/sources/pkg/reconciler/jobsource/resources"
 
 	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -42,6 +43,13 @@ func NewJobSource(name string, options ...JobSourceOption) *v1alpha1.JobSource {
 
 	js.SetDefaults(context.Background())
 	return js
+}
+
+func WithFakeJobContainer(js *v1alpha1.JobSource) {
+	js.Spec.Template.Spec.Containers = append(js.Spec.Template.Spec.Containers, corev1.Container{
+		Name:  "Steve",
+		Image: "grc.io/fakeimage",
+	})
 }
 
 type JobOption func(*batchv1.Job)

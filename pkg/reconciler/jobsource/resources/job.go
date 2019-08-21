@@ -33,7 +33,8 @@ const (
 )
 
 func MakeJob(js *v1alpha1.JobSource) *batchv1.Job {
-	podTemplate := &js.Spec.Template
+	spec := js.Spec.JobSpec.DeepCopy()
+	podTemplate := &spec.Template
 	if podTemplate.ObjectMeta.Labels == nil {
 		podTemplate.ObjectMeta.Labels = make(map[string]string)
 	}
@@ -57,7 +58,7 @@ func MakeJob(js *v1alpha1.JobSource) *batchv1.Job {
 			Labels:          Labels(js),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(js)},
 		},
-		Spec: js.Spec.JobSpec,
+		Spec: *spec,
 	}
 
 	// TODO(spencer-p) Set job.Spec.Template.ObjectMeta.Annotations or .Labels?

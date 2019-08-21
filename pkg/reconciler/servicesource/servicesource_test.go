@@ -23,32 +23,32 @@ import (
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	"github.com/n3wscott/sources/pkg/reconciler"
-	"github.com/n3wscott/sources/pkg/reconciler/jobsource/resources"
+	"github.com/n3wscott/sources/pkg/reconciler/servicesource/resources"
 
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
-	"knative.dev/pkg/apis"
+	_ "knative.dev/pkg/apis"
 	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/ptr"
+	_ "knative.dev/pkg/ptr"
+	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
 
 	. "github.com/n3wscott/sources/pkg/reconciler/testing"
 	. "knative.dev/pkg/reconciler/testing"
 )
 
 const (
-	jsName         = "my-jobsource"
-	jsUID          = "1234"
-	jsJobFixedName = jsName + "-jobsource-" + jsUID
-	sinkName       = "my-sink"
-	ns             = "default"
-	key            = ns + "/" + jsName
-	sinkURI        = "http://" + sinkName + "." + ns + ".svc.cluster.local/"
+	sName             = "my-servicesource"
+	sUID              = "1234"
+	sServiceFixedName = sName + "-source-" + sUID
+	sinkName          = "my-sink"
+	ns                = "default"
+	key               = ns + "/" + sName
+	sinkURI           = "http://" + sinkName + "." + ns + ".svc.cluster.local/"
 
 	failreason  = "fail reason"
 	failmessage = "fail message"
@@ -63,6 +63,11 @@ var (
 	}))
 )
 
+func init() {
+	// Add types to scheme
+	_ = v1alpha1.AddToScheme(scheme.Scheme)
+}
+
 func namedTestSink(name string) apisv1alpha1.Destination {
 	return destMust(apisv1alpha1.NewDestination(&corev1.ObjectReference{
 		Name:       name,
@@ -70,11 +75,6 @@ func namedTestSink(name string) apisv1alpha1.Destination {
 		APIVersion: "testing.eventing.knative.dev/v1alpha1",
 		Kind:       "Sink",
 	}))
-}
-
-func init() {
-	// Add types to scheme
-	_ = v1alpha1.AddToScheme(scheme.Scheme)
 }
 
 // destMust eats errors related to destination creation, which should not happen for our known test inputs.
@@ -103,7 +103,7 @@ func newUnstructuredSink(scheme, hostname string) *unstructured.Unstructured {
 	}
 }
 
-func TestJobSource(t *testing.T) {
+func TestServiceSource(t *testing.T) {
 	table := TableTest{{
 		Name: "bad workqueue key",
 		// Make sure Reconcile handles bad keys.
@@ -115,43 +115,43 @@ func TestJobSource(t *testing.T) {
 	}, {
 		Name: "missing sink in spec causes errors",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Status.InitializeConditions()
+			NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Status.InitializeConditions()
 			}),
 		},
 		Key:     key,
 		WantErr: true,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
+			Object: NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
 
-				js.Status.InitializeConditions()
-				js.Status.MarkNoSink("Missing", "Sink missing from spec")
+				s.Status.InitializeConditions()
+				s.Status.MarkNoSink("Missing", "Sink missing from spec")
 			}),
 		}},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "UpdateFailed", "Failed to update status for %q: expected exactly one, got neither: spec.sink.uri, spec.sink[apiVersion, kind, name]", jsName),
+			Eventf(corev1.EventTypeWarning, "UpdateFailed", "Failed to update status for %q: expected exactly one, got neither: spec.sink.uri, spec.sink[apiVersion, kind, name]", sName),
 		},
 	}, {
 		Name: "sink not existing causes errors",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Status.InitializeConditions()
-				js.Spec.Sink = namedTestSink("dne") // does not exist
+			NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Status.InitializeConditions()
+				s.Spec.Sink = namedTestSink("dne") // does not exist
 			}),
 			// Sink not added to objects
 		},
 		Key:     key,
 		WantErr: true,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = namedTestSink("dne")
+			Object: NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = namedTestSink("dne")
 
-				js.Status.InitializeConditions()
-				js.Status.MarkNoSink("NotFound", `Could not resolve sink URI: failed to get ref %+v: sinks.testing.eventing.knative.dev "dne" not found`, js.Spec.Sink)
+				s.Status.InitializeConditions()
+				s.Status.MarkNoSink("NotFound", `Could not resolve sink URI: failed to get ref %+v: sinks.testing.eventing.knative.dev "dne" not found`, s.Spec.Sink)
 			}),
 		}},
 		WantEvents: []string{
@@ -160,10 +160,10 @@ func TestJobSource(t *testing.T) {
 	}, {
 		Name: "sink with bad address causes errors",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Status.InitializeConditions()
-				js.Spec.Sink = namedTestSink(sinkName)
+			NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Status.InitializeConditions()
+				s.Spec.Sink = namedTestSink(sinkName)
 			}),
 			// The sink we are referencing here has an empty host, which should be erroneous.
 			// This will result in a lookup fail.
@@ -172,111 +172,112 @@ func TestJobSource(t *testing.T) {
 		Key:     key,
 		WantErr: true,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = namedTestSink(sinkName)
+			Object: NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = namedTestSink(sinkName)
 
-				js.Status.InitializeConditions()
-				js.Status.MarkNoSink("NotFound", fmt.Sprintf(`Could not resolve sink URI: missing hostname in address of %+v`, namedTestSink(sinkName)))
+				s.Status.InitializeConditions()
+				s.Status.MarkNoSink("NotFound", fmt.Sprintf(`Could not resolve sink URI: hostname missing in address of %+v`, namedTestSink(sinkName)))
 			}),
 		}},
 		WantEvents: []string{
-			Eventf(corev1.EventTypeWarning, "InternalError", `missing hostname in address of %+v`, namedTestSink(sinkName)),
+			Eventf(corev1.EventTypeWarning, "InternalError", `hostname missing in address of %+v`, namedTestSink(sinkName)),
 		},
 	}, {
-		Name: "having sink starts a job",
+		Name: "having sink creates a service",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Status.InitializeConditions()
-				js.Spec.Sink = svcSink
+			NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Status.InitializeConditions()
+				s.Spec.Sink = svcSink
 			}),
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
+			Object: NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
 
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
-				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+				s.Status.MarkServiceDeploying()
 			}),
 		}},
-		WantCreates: []runtime.Object{resources.MakeJob(
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
+		WantCreates: []runtime.Object{resources.MakeService(
+			NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
+				s.Status.MarkSink(sinkURI)
 			}),
 		)},
-	}, {
+	}, /*{
 		Name: "having uri sink starts a job",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Status.InitializeConditions()
-				js.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}}
+			NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Status.InitializeConditions()
+				s.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}}
 			}),
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}}
+			Object: NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}}
 
-				js.Status.InitializeConditions()
-				js.Status.MarkSink("http://example.com")
-				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
+				s.Status.InitializeConditions()
+				s.Status.MarkSink("http://example.com")
+				s.Status.MarkJobRunning("Created Job %q.", sJobFixedName)
 			}),
 		}},
-		WantCreates: []runtime.Object{resources.MakeJob(
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
+		WantCreates: []runtime.Object{resources.MakeService(
+			NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
 			}),
 		)},
 	}, {
 		Name: "having uri sink with path starts a job",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Status.InitializeConditions()
-				js.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}, Path: ptr.String("/foo/bar")}
+			NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Status.InitializeConditions()
+				s.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}, Path: ptr.String("/foo/bar")}
 			}),
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}, Path: ptr.String("/foo/bar")}
+			Object: NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}, Path: ptr.String("/foo/bar")}
 
-				js.Status.InitializeConditions()
-				js.Status.MarkSink("http://example.com/foo/bar")
-				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
+				s.Status.InitializeConditions()
+				s.Status.MarkSink("http://example.com/foo/bar")
+				s.Status.MarkJobRunning("Created Job %q.", sJobFixedName)
 			}),
 		}},
-		WantCreates: []runtime.Object{resources.MakeJob(
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
+		WantCreates: []runtime.Object{resources.MakeService(
+			NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
 			}),
 		)},
 	}, {
 		Name: "job succeed implies jobsource succeed",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
-				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
+			NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+				s.Status.MarkJobRunning("Created Job %q.", sJobFixedName)
 			}),
-			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
-			}), func(job *batchv1.Job) {
+			NewService(NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+			}), func(job *batchv1.Service) {
 				// Mark the job as completed.  If this test
 				// fails in the future, it may be because the
 				// MakeJob function is inserting a success
@@ -289,31 +290,31 @@ func TestJobSource(t *testing.T) {
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
+			Object: NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
 
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
-				js.Status.MarkJobSucceeded()
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+				s.Status.MarkJobSucceeded()
 			}),
 		}},
 	}, {
 		Name: "job failed implies jobsource failed",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
-				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
+			NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+				s.Status.MarkJobRunning("Created Job %q.", sJobFixedName)
 			}),
-			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
-			}), func(job *batchv1.Job) {
+			NewService(NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+			}), func(job *batchv1.Service) {
 				// Mark the job as failed.
 				// See above test for potential issues.
 				job.Status.Conditions = append(job.Status.Conditions, batchv1.JobCondition{
@@ -326,70 +327,71 @@ func TestJobSource(t *testing.T) {
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
+			Object: NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
 
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
-				js.Status.MarkJobFailed(failreason, failmessage)
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+				s.Status.MarkJobFailed(failreason, failmessage)
 			}),
 		}},
 	}, {
 		Name: "job running means jobsource status unknown",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
+			NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
 			}),
-			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
-			}), func(job *batchv1.Job) {}),
+			NewService(NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+			})),
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Spec.Sink = svcSink
+			Object: NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
 
-				js.Status.InitializeConditions()
-				js.Status.MarkSink(sinkURI)
-				js.Status.MarkJobRunning("Job %q already exists.", jsJobFixedName)
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+				s.Status.MarkServiceRunning("Job %q already exists.", sJobFixedName)
 			}),
 		}},
 	}, {
 		Name: "sink updates do not change anything after job starts",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Status.InitializeConditions()
-				js.Spec.Sink = namedTestSink(sinkName)
-				js.Status.MarkSink(sinkURI)
-				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
+			NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Status.InitializeConditions()
+				s.Spec.Sink = namedTestSink(sinkName)
+				s.Status.MarkSink(sinkURI)
+				s.Status.MarkJobRunning("Created Job %q.", sJobFixedName)
 			}),
-			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
-				js.UID = jsUID
-				js.Status.InitializeConditions()
-				js.Spec.Sink = namedTestSink(sinkName)
-				js.Status.MarkSink(sinkURI)
-			}), func(job *batchv1.Job) {}),
+			NewService(NewServiceSource(sName, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Status.InitializeConditions()
+				s.Spec.Sink = namedTestSink(sinkName)
+				s.Status.MarkSink(sinkURI)
+			})),
 
 			// This address is different than the one we marked
 			newUnstructuredSink("http", "garbage"),
 		},
 		Key: key,
 		// Expect nothing to happen
-	}}
+	}*/}
 
 	table.Test(t, MakeFactory(func(ctx context.Context, listers *Listers, cmw configmap.Watcher) controller.Reconciler {
 		return &Reconciler{
-			Base:   reconciler.NewBase(ctx, "JobSource", cmw),
-			Lister: listers.GetJobSourceLister(),
+			Base:             reconciler.NewBase(ctx, "ServiceSource", cmw),
+			Lister:           listers.GetServiceSourceLister(),
+			ServingClientSet: fakeservingclient.Get(ctx),
 		}
 	}))
 }

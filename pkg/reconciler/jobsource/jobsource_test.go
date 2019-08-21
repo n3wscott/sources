@@ -63,6 +63,11 @@ var (
 	}))
 )
 
+func init() {
+	// Add types to scheme
+	_ = v1alpha1.AddToScheme(scheme.Scheme)
+}
+
 func namedTestSink(name string) apisv1alpha1.Destination {
 	return destMust(apisv1alpha1.NewDestination(&corev1.ObjectReference{
 		Name:       name,
@@ -70,11 +75,6 @@ func namedTestSink(name string) apisv1alpha1.Destination {
 		APIVersion: "testing.eventing.knative.dev/v1alpha1",
 		Kind:       "Sink",
 	}))
-}
-
-func init() {
-	// Add types to scheme
-	_ = v1alpha1.AddToScheme(scheme.Scheme)
 }
 
 // destMust eats errors related to destination creation, which should not happen for our known test inputs.
@@ -186,7 +186,7 @@ func TestJobSource(t *testing.T) {
 	}, {
 		Name: "having sink starts a job",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
 				js.Spec.Sink = svcSink
@@ -194,7 +194,7 @@ func TestJobSource(t *testing.T) {
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			Object: NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
 
@@ -204,15 +204,17 @@ func TestJobSource(t *testing.T) {
 			}),
 		}},
 		WantCreates: []runtime.Object{resources.MakeJob(
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
+				js.Status.InitializeConditions()
+				js.Status.MarkSink(sinkURI)
 			}),
 		)},
 	}, {
 		Name: "having uri sink starts a job",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
 				js.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}}
@@ -220,7 +222,7 @@ func TestJobSource(t *testing.T) {
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			Object: NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}}
 
@@ -230,15 +232,17 @@ func TestJobSource(t *testing.T) {
 			}),
 		}},
 		WantCreates: []runtime.Object{resources.MakeJob(
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
+				js.Status.InitializeConditions()
+				js.Status.MarkSink("http://example.com")
 			}),
 		)},
 	}, {
 		Name: "having uri sink with path starts a job",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
 				js.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}, Path: ptr.String("/foo/bar")}
@@ -246,7 +250,7 @@ func TestJobSource(t *testing.T) {
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			Object: NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = apisv1alpha1.Destination{URI: &apis.URL{Host: "example.com", Scheme: "http"}, Path: ptr.String("/foo/bar")}
 
@@ -256,22 +260,24 @@ func TestJobSource(t *testing.T) {
 			}),
 		}},
 		WantCreates: []runtime.Object{resources.MakeJob(
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
+				js.Status.InitializeConditions()
+				js.Status.MarkSink("http://example.com/foo/bar")
 			}),
 		)},
 	}, {
 		Name: "job succeed implies jobsource succeed",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
 				js.Status.MarkSink(sinkURI)
 				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
 			}),
-			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJob(NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
@@ -289,7 +295,7 @@ func TestJobSource(t *testing.T) {
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			Object: NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
 
@@ -338,22 +344,22 @@ func TestJobSource(t *testing.T) {
 	}, {
 		Name: "job running means jobsource status unknown",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
 				js.Status.MarkSink(sinkURI)
 			}),
-			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJob(NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
 				js.Status.InitializeConditions()
 				js.Status.MarkSink(sinkURI)
-			}), func(job *batchv1.Job) {}),
+			})),
 		},
 		Key: key,
 		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
-			Object: NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			Object: NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Spec.Sink = svcSink
 
@@ -365,19 +371,19 @@ func TestJobSource(t *testing.T) {
 	}, {
 		Name: "sink updates do not change anything after job starts",
 		Objects: []runtime.Object{
-			NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
 				js.Spec.Sink = namedTestSink(sinkName)
 				js.Status.MarkSink(sinkURI)
 				js.Status.MarkJobRunning("Created Job %q.", jsJobFixedName)
 			}),
-			NewJob(NewJobSource(jsName, func(js *v1alpha1.JobSource) {
+			NewJob(NewJobSource(jsName, WithFakeJobContainer, func(js *v1alpha1.JobSource) {
 				js.UID = jsUID
 				js.Status.InitializeConditions()
 				js.Spec.Sink = namedTestSink(sinkName)
 				js.Status.MarkSink(sinkURI)
-			}), func(job *batchv1.Job) {}),
+			})),
 
 			// This address is different than the one we marked
 			newUnstructuredSink("http", "garbage"),

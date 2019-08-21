@@ -36,7 +36,7 @@ import (
 	"go.uber.org/zap"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
+	_ "knative.dev/pkg/logging"
 	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 	servingclientset "knative.dev/serving/pkg/client/clientset/versioned"
 )
@@ -68,14 +68,14 @@ var _ controller.Reconciler = (*Reconciler)(nil)
 
 // Reconcile implements controller.Reconciler
 func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
-	logger := logging.FromContext(ctx)
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		logger.Errorf("invalid resource key: %s", key)
+		r.Logger.Errorf("invalid resource key: %s", key)
 		return nil
 	}
+	r.Logger.Warnf("ns/name is %s/%s", namespace, name)
 
 	// If our controller has configuration state, we'd "freeze" it and
 	// attach the frozen configuration to the context.
@@ -85,7 +85,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	original, err := r.Lister.ServiceSources(namespace).Get(name)
 	if apierrs.IsNotFound(err) {
 		// The resource may no longer exist, in which case we stop processing.
-		logger.Errorf("resource %q no longer exists", key)
+		r.Logger.Errorf("resource %q no longer exists", key)
 		return nil
 	} else if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 		// cache may be stale and we don't want to overwrite a prior update
 		// to status with this stale state.
 	} else if _, err = r.updateStatus(resource); err != nil {
-		logger.Warnw("Failed to update resource status", zap.Error(err))
+		r.Logger.Warnw("Failed to update resource status", zap.Error(err))
 		r.Recorder.Eventf(resource, corev1.EventTypeWarning, "UpdateFailed",
 			"Failed to update status for %q: %v", resource.Name, err)
 		return err
@@ -153,7 +153,7 @@ func (r *Reconciler) reconcileService(ctx context.Context, source *v1alpha1.Serv
 			return fmt.Errorf("failed to create Service: %s", err)
 		}
 
-		source.Status.MarkServiceReadyUnknown("Waiting", "Ceated Service %q.", service.Name)
+		source.Status.MarkServiceDeploying()
 		return nil
 	} else if err != nil {
 		r.Logger.Warnw("Failed get:", zap.Error(err))
@@ -181,7 +181,12 @@ func (r *Reconciler) reconcileService(ctx context.Context, source *v1alpha1.Serv
 }
 
 func (r *Reconciler) getService(ctx context.Context, owner metav1.Object) (*servingv1beta1.Service, error) {
-	return r.ServingClientSet.ServingV1beta1().Services(owner.GetNamespace()).Get(resources.ServiceName(owner), metav1.GetOptions{})
+	cli := r.ServingClientSet
+	serving := cli.ServingV1beta1()
+	svcs := serving.Services(owner.GetNamespace())
+	svc, err := svcs.Get(resources.ServiceName(owner), metav1.GetOptions{})
+	return svc, err
+	//return r.ServingClientSet.ServingV1beta1().Services(owner.GetNamespace()).Get(resources.ServiceName(owner), metav1.GetOptions{})
 }
 
 // Update the Status of the resource.  Caller is responsible for checking

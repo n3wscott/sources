@@ -42,7 +42,7 @@ func MakeService(source *v1alpha1.ServiceSource) *servingv1beta1.Service {
 	containers := []corev1.Container{}
 	for i, c := range podTemplate.Spec.Containers {
 		if c.Name == "" {
-			c.Name = fmt.Sprintf("jobsource%d", i)
+			c.Name = fmt.Sprintf("servicesource%d", i)
 		}
 		c.Env = append(c.Env, corev1.EnvVar{Name: "K_SINK", Value: source.Status.SinkURI})
 		c.Env = append(c.Env, corev1.EnvVar{Name: "K_OUTPUT_FORMAT", Value: string(source.Spec.OutputFormat)})
@@ -60,7 +60,7 @@ func MakeService(source *v1alpha1.ServiceSource) *servingv1beta1.Service {
 		Spec: source.Spec.ServiceSpec,
 	}
 
-	// TODO(spencer-p) Set job.Spec.Template.ObjectMeta.Annotations or .Labels?
+	// TODO(spencer-p) Bubble up some annotations about creator, etc
 	return service
 }
 
