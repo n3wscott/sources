@@ -1,0 +1,14 @@
+apiVersion: sources.knative.dev/v1alpha1
+kind: ServiceSource
+metadata:
+  name: doubleforwarder
+  description: forwarder forwards cloud events and other info posted to it to another forwarder
+spec:
+  template:
+    spec:
+      containers:
+        - image: github.com/n3wscott/sources/cmd/demos/forwarder
+  sink:
+    apiVersion: sources.knative.dev/v1alpha1
+    kind: ServiceSource
+    name: forwarder

@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<meta charset='utf-8'>
+<!-- DO NOT SUBMIT: Fix Page Title. Missing tags? http://go/optional-html -->
+<title>Knative Event Forwarder</title>
+<style> {{ template "style.css" }} </style>
+<h1>Import an event on my cluster!</h1>
+<form action='/import' method='post'>
+  <textarea autofocus=true name='data'>{"Hello": "world!"}</textarea><br>
+  <input type='submit' value='Import Event'/>
+</form>
