@@ -30,11 +30,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	clientgotesting "k8s.io/client-go/testing"
-	_ "knative.dev/pkg/apis"
+	"knative.dev/pkg/apis"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	_ "knative.dev/pkg/ptr"
+	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
 
 	. "github.com/n3wscott/sources/pkg/reconciler/testing"
@@ -203,13 +205,55 @@ func TestServiceSource(t *testing.T) {
 				s.Status.MarkServiceDeploying()
 			}),
 		}},
-		WantCreates: []runtime.Object{resources.MakeService(
-			NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+		WantCreates: []runtime.Object{
+			resources.MakeService(NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
 				s.UID = sUID
 				s.Spec.Sink = svcSink
+				s.Status.InitializeConditions()
 				s.Status.MarkSink(sinkURI)
+			})),
+		},
+	}, {
+		Name: "service ready propagates to servicesource",
+		Objects: []runtime.Object{
+			NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Status.InitializeConditions()
+				s.Spec.Sink = svcSink
+				s.Status.MarkSink(sinkURI)
+				s.Status.MarkServiceDeploying()
 			}),
-		)},
+			NewService(NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+			}), func(svc *servingv1beta1.Service) {
+				svc.Status.Conditions = append(svc.Status.Conditions, apis.Condition{
+					Type:   servingv1beta1.ServiceConditionReady,
+					Status: corev1.ConditionTrue,
+				})
+				svc.Status.Address = &duckv1beta1.Addressable{&apis.URL{
+					Host:   fmt.Sprintf("%s.%s.cluster.local", svc.Name, svc.Namespace),
+					Scheme: "http",
+				}}
+			}),
+		},
+		Key: key,
+		WantStatusUpdates: []clientgotesting.UpdateActionImpl{{
+			Object: NewServiceSource(sName, WithMinServiceSpec, func(s *v1alpha1.ServiceSource) {
+				s.UID = sUID
+				s.Spec.Sink = svcSink
+
+				s.Status.InitializeConditions()
+				s.Status.MarkSink(sinkURI)
+				s.Status.MarkServiceReady()
+				s.Status.MarkAddress(&duckv1beta1.Addressable{&apis.URL{
+					Host:   fmt.Sprintf("%s.%s.cluster.local", resources.ServiceName(s), ns),
+					Scheme: "http",
+				}})
+			}),
+		}},
 	}, /*{
 		Name: "having uri sink starts a job",
 		Objects: []runtime.Object{

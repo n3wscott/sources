@@ -177,6 +177,8 @@ func (r *Reconciler) reconcileService(ctx context.Context, source *v1alpha1.Serv
 		source.Status.MarkServiceReady()
 	}
 
+	source.Status.MarkAddress(service.Status.Address)
+
 	return nil
 }
 

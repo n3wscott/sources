@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 const (
@@ -75,4 +76,12 @@ func (s *ServiceSourceStatus) MarkServiceDeploying() {
 
 func (s *ServiceSourceStatus) MarkServiceNotReady(reason, messageFormat string, messageA ...interface{}) {
 	serviceSourceCondSet.Manage(s).MarkFalse(ServiceSourceConditionServiceReady, reason, messageFormat, messageA...)
+}
+
+func (s *ServiceSourceStatus) MarkAddress(addr *duckv1beta1.Addressable) {
+	s.AddressStatus.Address = addr
+}
+
+func (s *ServiceSourceStatus) MarkNoAddress() {
+	s.AddressStatus.Address = nil
 }

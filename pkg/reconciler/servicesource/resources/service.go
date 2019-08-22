@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
-	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/kmeta"
 
 	corev1 "k8s.io/api/core/v1"
@@ -65,7 +64,8 @@ func MakeService(source *v1alpha1.ServiceSource) *servingv1beta1.Service {
 }
 
 func ServiceName(owner metav1.Object) string {
-	return utils.GenerateFixedName(owner, owner.GetName()+"-servicesource-")
+	// For now, this just returns the owner's name.
+	return owner.GetName()
 }
 
 func Labels(owner kmeta.OwnerRefable) map[string]string {

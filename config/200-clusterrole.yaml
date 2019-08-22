@@ -38,4 +38,4 @@ rules:
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
   - apiGroups: ["serving.knative.dev"]
     resources: ["services"]
-    verbs: ["get", "list", "watch"]
+    verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
