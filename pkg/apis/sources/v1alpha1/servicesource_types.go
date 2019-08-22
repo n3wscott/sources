@@ -61,7 +61,11 @@ type ServiceSourceStatus struct {
 	BaseSourceStatus `json:",inline"`
 
 	// ServiceSource is an AddressableType via inheriting its Service's address status.
+	// This enables the ServiceSource to also be a sink.
 	duckv1beta1.AddressStatus `json:",inline"`
+
+	// URL is the ServiceSource's pretty/public address.
+	URL *apis.URL `json:"url,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

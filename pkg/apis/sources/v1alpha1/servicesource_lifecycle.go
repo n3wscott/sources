@@ -79,9 +79,17 @@ func (s *ServiceSourceStatus) MarkServiceNotReady(reason, messageFormat string, 
 }
 
 func (s *ServiceSourceStatus) MarkAddress(addr *duckv1beta1.Addressable) {
-	s.AddressStatus.Address = addr
+	s.AddressStatus.Address = addr.DeepCopy()
 }
 
 func (s *ServiceSourceStatus) MarkNoAddress() {
 	s.AddressStatus.Address = nil
+}
+
+func (s *ServiceSourceStatus) MarkURL(url *apis.URL) {
+	s.URL = url.DeepCopy()
+}
+
+func (s *ServiceSourceStatus) MarkNoURL() {
+	s.URL = nil
 }

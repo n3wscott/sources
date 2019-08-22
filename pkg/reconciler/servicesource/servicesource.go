@@ -33,6 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"knative.dev/pkg/apis"
 	"knative.dev/pkg/controller"
@@ -139,11 +140,12 @@ func (r *Reconciler) reconcile(ctx context.Context, source *v1alpha1.ServiceSour
 func (r *Reconciler) reconcileService(ctx context.Context, source *v1alpha1.ServiceSource) error {
 	service, err := r.getService(ctx, source)
 
+	// The state we would like to see show up in K8s eventually
+	desired := resources.MakeService(source)
+
 	if apierrs.IsNotFound(err) {
 		// No service, must create it
-		service = resources.MakeService(source)
-
-		service, err := r.ServingClientSet.ServingV1beta1().Services(source.Namespace).Create(service)
+		service, err := r.ServingClientSet.ServingV1beta1().Services(source.Namespace).Create(desired)
 		if err != nil || service == nil {
 			msg := "Failed to make Service."
 			if err != nil {
@@ -161,7 +163,17 @@ func (r *Reconciler) reconcileService(ctx context.Context, source *v1alpha1.Serv
 		return fmt.Errorf("failed to get Service: %s", err)
 	}
 
-	// Service exists, check if it is done
+	// The service exists; check if it looks like we expect
+	if diff := cmp.Diff(desired.Spec, service.Spec); diff != "" {
+		service.Spec = desired.Spec
+		service, err := r.ServingClientSet.ServingV1beta1().Services(source.Namespace).Update(service)
+		r.Logger.Desugar().Info("Service updated.",
+			zap.Error(err), zap.Any("service", service), zap.String("diff", diff))
+		source.Status.MarkServiceDeploying()
+		return err
+	}
+
+	// Service exists and looks fine, propagate its status
 	cond := serviceReadyCondition(service)
 	if cond == nil {
 		source.Status.MarkServiceReadyUnknown(serviceReadyUnknownReason, serviceReadyUnknownMessage)
@@ -178,6 +190,7 @@ func (r *Reconciler) reconcileService(ctx context.Context, source *v1alpha1.Serv
 	}
 
 	source.Status.MarkAddress(service.Status.Address)
+	source.Status.MarkURL(service.Status.URL)
 
 	return nil
 }
