@@ -18,10 +18,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"log"
-	gohttp "net/http"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -29,14 +28,13 @@ import (
 	"syscall"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	cloudeventsclient "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
-	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/plugin/ochttp/propagation/b3"
-	"knative.dev/pkg/tracing"
+	moron "github.com/spencer-p/moroncloudevents"
 )
 
 const (
@@ -55,15 +53,15 @@ type envConfig struct {
 	DataPath string `envconfig:"KO_DATA_PATH"`
 
 	// Service options
-	Port int `envconfig:"PORT"`
+	Port string `envconfig:"PORT"`
 }
 
-func makeIndexHandler(dir string) gohttp.HandlerFunc {
+func makeIndexHandler(dir string) http.HandlerFunc {
 	templates := template.Must(template.ParseGlob(path.Join(dir, "*")))
 
-	return func(w gohttp.ResponseWriter, r *gohttp.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
-			w.WriteHeader(gohttp.StatusMethodNotAllowed)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -76,8 +74,9 @@ func makeIndexHandler(dir string) gohttp.HandlerFunc {
 	}
 }
 
-func makeImporterHandle(client cloudevents.Client) interface{} {
-	return func(event cloudevents.Event, r *cloudevents.EventResponse) error {
+func makeImporterHandle(client cloudevents.Client) cloudeventsclient.ReceiveFull {
+
+	return func(ctx context.Context, event cloudevents.Event, r *cloudevents.EventResponse) error {
 		log.Printf("Importing an event: %+v\n", event)
 
 		response, err := client.Send(context.Background(), event)
@@ -99,14 +98,14 @@ func makeImporterHandle(client cloudevents.Client) interface{} {
 			}
 		}
 
-		r.RespondWith(gohttp.StatusOK, response)
+		r.RespondWith(http.StatusOK, response)
 
 		return nil
 	}
 }
 
 func convert(ctx context.Context, m transport.Message, err error) (*cloudevents.Event, error) {
-	if msg, ok := m.(*http.Message); ok {
+	if msg, ok := m.(*cloudeventshttp.Message); ok {
 
 		vals, err := url.ParseQuery(string(msg.Body))
 		if err != nil {
@@ -136,84 +135,53 @@ func convert(ctx context.Context, m transport.Message, err error) (*cloudevents.
 	return nil, err
 }
 
-func (env *envConfig) registerHandlers(mux *gohttp.ServeMux) {
-	mux.HandleFunc("/", makeIndexHandler(env.DataPath))
-
-	mux.HandleFunc("/healthz", func(w gohttp.ResponseWriter, r *gohttp.Request) {
-		w.WriteHeader(200)
-	})
-
-	gohttp.HandleFunc("/versionz", func(w gohttp.ResponseWriter, r *gohttp.Request) {
-		w.Write([]byte(VERSION))
-	})
-}
-
-func (env *envConfig) makeClient(mux *gohttp.ServeMux) (cloudevents.Client, error) {
-	// Build transport options
-	tOpts := []http.Option{
-		http.WithMiddleware(tracing.HTTPSpanMiddleware),
-		cloudevents.WithTarget(env.Sink),
-		cloudevents.WithPath("/import"),
-		cloudevents.WithPort(env.Port),
-	}
-	switch env.OutputFormat {
-	case v1alpha1.OutputFormatBinary:
-		tOpts = append(tOpts, cloudevents.WithBinaryEncoding())
-	case v1alpha1.OutputFormatStructured:
-		tOpts = append(tOpts, cloudevents.WithStructuredEncoding())
-	default:
-		return nil, fmt.Errorf("Unknown OutputFormatType: %q", env.OutputFormat)
-	}
-
-	// Construct the transport
-	transport, err := cloudevents.NewHTTPTransport(tOpts...)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add output tracing.
-	transport.Client = &gohttp.Client{
-		Transport: &ochttp.Transport{
-			Propagation: &b3.HTTPFormat{},
-		},
-	}
-
-	// Set the mux
-	transport.Handler = mux
-
-	// Construct the client
-	ceclient, err := cloudevents.NewClient(transport,
-		cloudevents.WithUUIDs(),
-		cloudevents.WithTimeNow(),
-		cloudevents.WithConverterFn(convert),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return ceclient, nil
-}
-
 func main() {
 	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
 		log.Fatal("Failed to process env: ", err)
 	}
 
-	if env.Port == 0 {
-		env.Port = 80
+	if env.Port == "" {
+		env.Port = "80"
 	}
 
-	mux := gohttp.NewServeMux()
-	env.registerHandlers(mux)
-	ceclient, err := env.makeClient(mux)
+	svr, err := moron.NewServer(&moron.ServerConfig{
+		Port:                  env.Port,
+		CloudEventReceivePath: "/import",
+		CloudEventTargets:     []string{env.Sink},
+		ConvertFn:             convert,
+		TransportOptions: []cloudeventshttp.Option{
+			func() cloudeventshttp.Option {
+				switch env.OutputFormat {
+				case v1alpha1.OutputFormatBinary:
+					return cloudevents.WithBinaryEncoding()
+				case v1alpha1.OutputFormatStructured:
+					return cloudevents.WithStructuredEncoding()
+				default:
+					log.Fatal("Unknown OutputFormatType: %q", env.OutputFormat)
+					return nil
+				}
+			}(),
+		},
+	})
 	if err != nil {
-		log.Fatal("Could not create CloudEvents client: ", err)
+		log.Fatal("Could not create server: ", err)
 	}
 
-	ctx, shutdown := context.WithCancel(context.Background())
+	svr.HandleCloudEvents(makeImporterHandle(svr.CloudEventClient()))
+
+	svr.HandleFunc("/", makeIndexHandler(env.DataPath))
+
+	svr.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+	})
+
+	svr.HandleFunc("/versionz", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(VERSION))
+	})
+
 	go func() {
-		log.Fatal(ceclient.StartReceiver(ctx, makeImporterHandle(ceclient)))
+		log.Fatal(svr.ListenAndServe())
 	}()
 
 	signalChan := make(chan os.Signal, 1)
@@ -222,5 +190,5 @@ func main() {
 
 	log.Println("Shutdown signal received, exiting...")
 
-	shutdown()
+	svr.Shutdown()
 }
