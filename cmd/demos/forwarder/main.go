@@ -58,10 +58,6 @@ type envConfig struct {
 	Port int `envconfig:"PORT"`
 }
 
-type Message struct {
-	Data []byte `json:"data"`
-}
-
 func makeIndexHandler(dir string) gohttp.HandlerFunc {
 	templates := template.Must(template.ParseGlob(path.Join(dir, "*")))
 
@@ -81,8 +77,6 @@ func makeIndexHandler(dir string) gohttp.HandlerFunc {
 }
 
 func makeImporterHandle(client cloudevents.Client) interface{} {
-	//sourceURL := *cloudevents.ParseURLRef(EVENT_SOURCE)
-
 	return func(event cloudevents.Event, r *cloudevents.EventResponse) error {
 		log.Printf("Importing an event: %+v\n", event)
 
@@ -92,6 +86,7 @@ func makeImporterHandle(client cloudevents.Client) interface{} {
 			return err
 		}
 
+		// If the response was not good, construct a friendly response
 		if response == nil {
 			responseval := cloudevents.NewEvent()
 			response = &responseval
@@ -104,7 +99,7 @@ func makeImporterHandle(client cloudevents.Client) interface{} {
 			}
 		}
 
-		r.RespondWith(gohttp.StatusMethodNotAllowed, response)
+		r.RespondWith(gohttp.StatusOK, response)
 
 		return nil
 	}
