@@ -400,10 +400,13 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:1904e7dd4a67274b95147e9a663432d1c523ea98f8c948bb3a67d4ce1dd346b6"
+  digest = "1:30d8d292e63a28d0dccdfc48696d43dd8bdd808c26b017c93ead6c88ffabdb37"
   name = "github.com/openzipkin/zipkin-go"
   packages = [
+    ".",
+    "idgenerator",
     "model",
+    "propagation",
     "reporter",
     "reporter/http",
   ]
@@ -505,6 +508,14 @@
   pruneopts = "NUT"
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b8372985b8a95bfa941a05558efd025f2b415c4c6e1acb0f68edc08b40a47287"
+  name = "github.com/spencer-p/moroncloudevents"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "106bdf73d64030023e13658bac72dbe15664ddd4"
 
 [[projects]]
   digest = "1:9d8420bbf131d1618bde6530af37c3799340d3762cc47210c1d9532a4c3a2779"
@@ -616,9 +627,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:382bb5a7fb4034db3b6a2d19e5a4a6bcf52f4750530603c01ca18a172fa3089b"
+  digest = "1:a2fc247e64b5dafd3251f12d396ec85f163d5bb38763c4997856addddf6e78d8"
   name = "golang.org/x/sync"
-  packages = ["semaphore"]
+  packages = [
+    "errgroup",
+    "semaphore",
+  ]
   pruneopts = "NUT"
   revision = "112230192c580c3556b8cee6403af37a4fc5f28c"
 
@@ -1172,7 +1186,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:333d8964bfd8f968187a6b5a32be46c9b9cf80d98f5d2e0b152a3c80706de0b7"
+  digest = "1:ce259047ab64799a355d1917b66edb74c4d9ded2c7113c1d915d4193e6c88996"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1194,10 +1208,7 @@
     "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
-    "pkg/duck",
-    "pkg/logging",
     "pkg/reconciler",
-    "pkg/reconciler/names",
     "pkg/utils",
   ]
   pruneopts = "NUT"
@@ -1205,7 +1216,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dbd3bf01f267e15f680366b3fff6147f0bcedd733ae774997484f1bbb18cbdf1"
+  digest = "1:77f51371f0a176e7e7184d0304b26c85c36ef2232be05a0f21d7ffe0f093ca80"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1246,8 +1257,11 @@
     "logging/testing",
     "metrics",
     "metrics/metricskey",
+    "network",
+    "profiling",
     "ptr",
     "reconciler/testing",
+    "resolver",
     "signals",
     "system",
     "system/testing",
@@ -1258,17 +1272,48 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "11fec633e4e3b3e25b7e59f835fec4b0f382469a"
+  revision = "39a29cf1bf26731a221a152373aca5c47b923222"
 
 [[projects]]
-  digest = "1:d65c29c496ee785c0874a1b385e40cab0510d8e2a8a5c1dc838bac85bb9ec28e"
+  digest = "1:b448d92f4806a302cd9585564388cda0f09e1ace7abe0f091e5d53d2237f1bcf"
   name = "knative.dev/serving"
   packages = [
     "pkg/apis/autoscaling",
+    "pkg/apis/autoscaling/v1alpha1",
     "pkg/apis/config",
     "pkg/apis/networking",
+    "pkg/apis/networking/v1alpha1",
     "pkg/apis/serving",
+    "pkg/apis/serving/v1alpha1",
     "pkg/apis/serving/v1beta1",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/fake",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1",
+    "pkg/client/clientset/versioned/typed/autoscaling/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/networking/v1alpha1",
+    "pkg/client/clientset/versioned/typed/networking/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/serving/v1alpha1",
+    "pkg/client/clientset/versioned/typed/serving/v1alpha1/fake",
+    "pkg/client/clientset/versioned/typed/serving/v1beta1",
+    "pkg/client/clientset/versioned/typed/serving/v1beta1/fake",
+    "pkg/client/informers/externalversions",
+    "pkg/client/informers/externalversions/autoscaling",
+    "pkg/client/informers/externalversions/autoscaling/v1alpha1",
+    "pkg/client/informers/externalversions/internalinterfaces",
+    "pkg/client/informers/externalversions/networking",
+    "pkg/client/informers/externalversions/networking/v1alpha1",
+    "pkg/client/informers/externalversions/serving",
+    "pkg/client/informers/externalversions/serving/v1alpha1",
+    "pkg/client/informers/externalversions/serving/v1beta1",
+    "pkg/client/injection/client",
+    "pkg/client/injection/client/fake",
+    "pkg/client/injection/informers/serving/factory",
+    "pkg/client/injection/informers/serving/v1alpha1/service",
+    "pkg/client/listers/autoscaling/v1alpha1",
+    "pkg/client/listers/networking/v1alpha1",
+    "pkg/client/listers/serving/v1alpha1",
+    "pkg/client/listers/serving/v1beta1",
     "pkg/gc",
     "pkg/network",
     "pkg/reconciler/route/config",
@@ -1319,8 +1364,13 @@
   input-imports = [
     "cloud.google.com/go/firestore",
     "github.com/cloudevents/sdk-go",
+    "github.com/cloudevents/sdk-go/pkg/cloudevents/client",
+    "github.com/cloudevents/sdk-go/pkg/cloudevents/transport",
     "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http",
+    "github.com/google/go-cmp/cmp",
+    "github.com/google/uuid",
     "github.com/kelseyhightower/envconfig",
+    "github.com/spencer-p/moroncloudevents",
     "go.opencensus.io/plugin/ochttp",
     "go.opencensus.io/plugin/ochttp/propagation/b3",
     "go.uber.org/zap",
@@ -1365,7 +1415,6 @@
     "k8s.io/code-generator/cmd/lister-gen",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/client/fake",
-    "knative.dev/eventing/pkg/duck",
     "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/utils",
     "knative.dev/pkg/apis",
@@ -1387,12 +1436,18 @@
     "knative.dev/pkg/logging/testing",
     "knative.dev/pkg/ptr",
     "knative.dev/pkg/reconciler/testing",
+    "knative.dev/pkg/resolver",
     "knative.dev/pkg/signals",
     "knative.dev/pkg/system",
     "knative.dev/pkg/tracing",
     "knative.dev/pkg/version",
     "knative.dev/pkg/webhook",
     "knative.dev/serving/pkg/apis/serving/v1beta1",
+    "knative.dev/serving/pkg/client/clientset/versioned",
+    "knative.dev/serving/pkg/client/clientset/versioned/fake",
+    "knative.dev/serving/pkg/client/injection/client",
+    "knative.dev/serving/pkg/client/injection/client/fake",
+    "knative.dev/serving/pkg/client/injection/informers/serving/v1alpha1/service",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
   ]

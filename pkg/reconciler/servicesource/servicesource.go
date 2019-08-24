@@ -196,12 +196,7 @@ func (r *Reconciler) reconcileService(ctx context.Context, source *v1alpha1.Serv
 }
 
 func (r *Reconciler) getService(ctx context.Context, owner metav1.Object) (*servingv1beta1.Service, error) {
-	cli := r.ServingClientSet
-	serving := cli.ServingV1beta1()
-	svcs := serving.Services(owner.GetNamespace())
-	svc, err := svcs.Get(resources.ServiceName(owner), metav1.GetOptions{})
-	return svc, err
-	//return r.ServingClientSet.ServingV1beta1().Services(owner.GetNamespace()).Get(resources.ServiceName(owner), metav1.GetOptions{})
+	return r.ServingClientSet.ServingV1beta1().Services(owner.GetNamespace()).Get(resources.ServiceName(owner), metav1.GetOptions{})
 }
 
 // Update the Status of the resource.  Caller is responsible for checking

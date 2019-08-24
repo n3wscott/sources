@@ -158,7 +158,7 @@ func main() {
 				case v1alpha1.OutputFormatStructured:
 					return cloudevents.WithStructuredEncoding()
 				default:
-					log.Fatal("Unknown OutputFormatType: %q", env.OutputFormat)
+					log.Fatalf("Unknown OutputFormatType: %q", env.OutputFormat)
 					return nil
 				}
 			}(),
