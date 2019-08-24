@@ -68,3 +68,42 @@ backend will assume that the salmon was not eaten if it does not receive a
 message in time.
 
 ## Backend design
+
+The root will serve a simple form for the username.
+
+The game path will serve the html/scripts described above.
+
+There will be some `/websocket` path that will upgrade to a websocket. When a
+websocket is created, it will be placed in a pool of active connections. The
+stored websocket will retain details about the user (perhaps wrapped in a
+struct, or in a closure). Alternatively, I may have the messages simply always
+state their username.
+
+For the salmon: When a jump message is received, create a cloud event with the
+salmon type and send it off. Contains username, etc. We will get a response
+within the timeout that they were either eaten or not, which will get sent back
+via websocket.
+
+For the bear: Websocket incoming requests will be the user clicking on a salmon.
+This will unblock the jump cloud event to send a cloud event response.
+
+There will be a `/receive` path for CloudEvents.
+
+The salmon will not receive unprompted cloud events. It only deals with
+responses.
+
+The bear will receive a jump method and start a timeout and wait for a eat on
+the websocket. The receive will generally look like this:
+```
+func receive() {
+	timeout := make some timeout
+	eaten := create some channel to receive from the websocket/look up websocket
+	select {
+		timeout:
+			too bad, respond with no eat
+		eaten:
+			tell em they got eat!
+	}
+}
+```
+
