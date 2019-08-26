@@ -2,22 +2,32 @@ package controller
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"path"
 
-	"github.com/n3wscott/sources/cmd/demos/salmonrun/pkg/controller"
 	moron "github.com/spencer-p/moroncloudevents"
 )
+
+func withLog(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s\n", r.Method, r.URL.String())
+		next.ServeHTTP(w, r)
+	})
+}
 
 func RegisterHandlers(svr *moron.Server, role, datapath string) error {
 	switch role {
 	case "salmon":
 		svr.HandleCloudEvents(salmonEventReceiver)
-		svr.HandleFunc("/websocket", salmonWebSocket)
+		svr.Handle("/websocket", withLog(makeWebSocketHandle(makeSalmonWSReceiver(svr.CloudEventClient()))))
 	case "bear":
 		svr.HandleCloudEvents(bearEventReceiver)
-		svr.HandleFunc("/websocket", bearWebSocket)
+		svr.Handle("/websocket", withLog(makeWebSocketHandle(makeBearWSReceiver(svr.CloudEventClient()))))
 	default:
 		return fmt.Errorf("unknown role %q", role)
 	}
 
-	svr.Handle("/", http.FileServer(datapath))
+	svr.Handle("/", withLog(http.FileServer(http.Dir(path.Join(datapath, role)))))
+	return nil
 }

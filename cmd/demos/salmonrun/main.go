@@ -1,12 +1,11 @@
 package main
 
 import (
-	"context"
 	"log"
-	"net/http"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/n3wscott/sources/cmd/demos/salmonrun/pkg/controller"
+	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	moron "github.com/spencer-p/moroncloudevents"
 )
 
@@ -30,17 +29,18 @@ func main() {
 	}
 
 	svr, err := moron.NewServer(&moron.ServerConfig{
-		Port:                  env.Port,
+		Port:                  conf.Port,
 		CloudEventReceivePath: "/receive",
-		Target:                env.Sink,
+		CloudEventTargets:     []string{conf.Sink},
 	})
 	if err != nil {
 		log.Fatal("Could not create server: ", err)
 	}
 
-	controller.RegisterHandlers(svr, env.Role, env.DataPath)
-
-	svr.HandleCloudEvents(receive)
+	err = controller.RegisterHandlers(svr, conf.Role, conf.DataPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	log.Fatal(svr.ListenAndServe())
 }

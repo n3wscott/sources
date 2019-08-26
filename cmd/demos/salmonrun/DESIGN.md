@@ -70,7 +70,7 @@ message in time.
 ## Backend design
 
 The root will serve a simple form for the username. Usernames will be appended
-with a UUID so that name collisions do not occur. 
+with a UUID so that name collisions do not occur.
 
 The game path will serve the html/scripts described above.
 
@@ -93,11 +93,11 @@ This will unblock the jump cloud event to send a cloud event response.
 There will be a `/receive` path for CloudEvents.
 
 The salmon will get eat/not eaten responses:
-```
+``go
 func receive() {
-	uname, uuid := from the event
-	conn := connectionmap[uname+uuid]
-	conn.Send(event data)
+  uname, uuid := from the event
+  conn := connectionmap[uname+uuid]
+  conn.Send(event data)
 }
 ```
 
@@ -105,18 +105,18 @@ The bear will receive a jump method and start a timeout and wait for a eat on
 the websocket. If the user eats the salmon, it will respond as such; if they
 don't do it in time, we send the no eat. The receive will generally look like
 this:
-```
+```go
 func receive() {
-	// TODO Does each receive get its own goroutine or are these blocking?
-	// If these are blocking, this should start a goroutine.
-	timeout := make some timeout
-	eaten := create some channel to receive from the websocket/look up websocket
-	select {
-		timeout:
-			too bad, respond with no eat
-		eaten:
-			tell em they got eat!
-	}
+  // TODO Does each receive get its own goroutine or are these blocking?
+  // If these are blocking, this should start a goroutine.
+  timeout := make some timeout
+  eaten := create some channel to receive from the websocket/look up websocket
+  select {
+    timeout:
+      too bad, respond with no eat
+    eaten:
+      tell em they got eat!
+  }
 }
 ```
 
