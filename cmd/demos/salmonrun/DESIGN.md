@@ -69,33 +69,46 @@ message in time.
 
 ## Backend design
 
-The root will serve a simple form for the username.
+The root will serve a simple form for the username. Usernames will be appended
+with a UUID so that name collisions do not occur. 
 
 The game path will serve the html/scripts described above.
 
 There will be some `/websocket` path that will upgrade to a websocket. When a
 websocket is created, it will be placed in a pool of active connections. The
 stored websocket will retain details about the user (perhaps wrapped in a
-struct, or in a closure). Alternatively, I may have the messages simply always
-state their username.
+struct, or in a closure). Messages will always store the username and UUID. The
+pool of connections will be a map (map[string]connection) where the keys are the
+cat of username and UUID.
 
 For the salmon: When a jump message is received, create a cloud event with the
 salmon type and send it off. Contains username, etc. We will get a response
 within the timeout that they were either eaten or not, which will get sent back
-via websocket.
+via websocket. The response will NOT be a response on the same connection. It
+will be a brand new connection that we process on the receive handler.
 
 For the bear: Websocket incoming requests will be the user clicking on a salmon.
 This will unblock the jump cloud event to send a cloud event response.
 
 There will be a `/receive` path for CloudEvents.
 
-The salmon will not receive unprompted cloud events. It only deals with
-responses.
-
-The bear will receive a jump method and start a timeout and wait for a eat on
-the websocket. The receive will generally look like this:
+The salmon will get eat/not eaten responses:
 ```
 func receive() {
+	uname, uuid := from the event
+	conn := connectionmap[uname+uuid]
+	conn.Send(event data)
+}
+```
+
+The bear will receive a jump method and start a timeout and wait for a eat on
+the websocket. If the user eats the salmon, it will respond as such; if they
+don't do it in time, we send the no eat. The receive will generally look like
+this:
+```
+func receive() {
+	// TODO Does each receive get its own goroutine or are these blocking?
+	// If these are blocking, this should start a goroutine.
 	timeout := make some timeout
 	eaten := create some channel to receive from the websocket/look up websocket
 	select {
