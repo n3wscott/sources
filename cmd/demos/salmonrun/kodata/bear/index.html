@@ -1,4 +1,19 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<script type="text/javascript" src="/index.js"></script>
 <title>Salmon Run</title>
-You are the bear.
+
+<p>You are the bear.</p>
+
+<div id="entergame">
+  <p>
+  Username: <input type="text" id="name" name="name" autocomplete="false">
+  <button onclick="enter_game()">Enter game</button>
+  </p>
+</div>
+
+<div id="game" style="display: none">
+  <p>This is the game, I guess.</p>
+  <p><button onclick="eat()" id="eat" style="display: none">Eat</button></p>
+  <p><div id="status"></div></p>
+</div>

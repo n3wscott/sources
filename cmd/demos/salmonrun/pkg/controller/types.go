@@ -2,9 +2,9 @@ package controller
 
 type Message struct {
 	Type  string `json:"type,omitempty"`
-	From  Player `json:"to,omitempty"`
-	To    Player `json:"from",omitempty"`
-	Nonce string `json:"id,omitempty"`
+	From  Player `json:"from,omitempty"`
+	To    Player `json:"to",omitempty"`
+	Nonce string `json:"nonce,omitempty"`
 }
 
 type Player struct {

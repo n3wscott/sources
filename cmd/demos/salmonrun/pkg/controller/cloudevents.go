@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"log"
+	"math/rand"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go"
@@ -20,7 +21,7 @@ func salmonEventReceiver(ctx context.Context, event cloudevents.Event, _ *cloude
 
 	send, ok := conns[msg.To.Key()]
 	if !ok {
-		log.Println("event delivered to player that no longer exists")
+		log.Printf("event for missing player %s/%s\n", msg.To.Name, msg.To.UUID)
 		return nil // not technically an error
 	}
 
@@ -36,10 +37,15 @@ func bearEventReceiver(ctx context.Context, event cloudevents.Event, _ *cloudeve
 	}
 
 	// Get a random user.
-	// TODO This relies on a Go implementation detail
+	// TODO This is broke
 	var key string
+	i := 0
+	n := rand.Intn(len(conns))
 	for key = range conns {
-		break
+		i += 1
+		if i == n {
+			break
+		}
 	}
 
 	send, ok := conns[key]

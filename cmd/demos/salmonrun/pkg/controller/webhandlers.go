@@ -24,15 +24,11 @@ type ConnectionSender func(msg *Message)
 
 func makeWebSocketHandle(callback ConnectionReceiver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("websocket")
-
 		name := r.FormValue("name")
 		if name == "" {
 			// Form validation is for serious applications, not demos
 			name = "Steve"
 		}
-
-		log.Printf("Websocket request with name %q\n", name)
 
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -57,6 +53,8 @@ func makeSalmonWSReceiver(client cloudevents.Client) ConnectionReceiver {
 			mtype, _, err := conn.ReadMessage()
 			if err != nil {
 				if closeerror(err) {
+					log.Println("conn closed, dropping %s/%s\n", player.Name, player.UUID)
+					delete(conns, player.Key())
 					return
 				}
 				log.Println("conn read err: ", err)
@@ -68,7 +66,7 @@ func makeSalmonWSReceiver(client cloudevents.Client) ConnectionReceiver {
 
 			// TODO it would be nice to validate the contents of the message.
 			// But it doesn't matter. The salmon only has one thing to say: "jump".
-			log.Println("Got a websocket message")
+			log.Printf("Got a websocket message from %s/%s\n", player.Name, player.UUID)
 
 			event := cloudevents.NewEvent()
 			event.SetSource(EVENT_SOURCE)
@@ -100,6 +98,9 @@ func makeBearWSReceiver(client cloudevents.Client) ConnectionReceiver {
 			for {
 				if err := conn.ReadJSON(&msg); err != nil {
 					if closeerror(err) {
+						log.Printf("conn closed, dropping %s/%s\n", player.Name, player.UUID)
+						delete(conns, player.Key())
+						delete(timeoutchans, player.Key())
 						close(msgchan)
 						stopchan <- struct{}{}
 						return
@@ -107,7 +108,7 @@ func makeBearWSReceiver(client cloudevents.Client) ConnectionReceiver {
 					log.Println("failed to read json msg: ", err)
 					continue
 				}
-				log.Println("Received a websocket message")
+				log.Printf("Received a websocket message for %s/%s\n", player.Name, player.UUID)
 				msgchan <- msg
 			}
 
@@ -115,15 +116,24 @@ func makeBearWSReceiver(client cloudevents.Client) ConnectionReceiver {
 
 		for {
 			var msg Message
+
 			select {
 			case msg = <-timeoutchan:
+				if _, ok := seen[msg.Nonce]; ok {
+					continue
+				}
 				seen[msg.Nonce] = struct{}{}
 				msg.Type = "noteat"
 				log.Println("Bear missed the fish!")
 			case msg = <-msgchan:
+				if msg.Nonce == "" {
+					log.Println("bear message with no nonce, dropping")
+					continue
+				}
 				if _, ok := seen[msg.Nonce]; ok {
 					continue
 				}
+				seen[msg.Nonce] = struct{}{}
 				msg.Type = "eat"
 				log.Println("Bear got the fish!")
 			case <-stopchan:
@@ -162,8 +172,10 @@ func makeConnSender(player Player, conn *websocket.Conn) ConnectionSender {
 		defer mtx.Unlock()
 		if err := conn.WriteJSON(msg); err != nil {
 			if closeerror(err) {
+				log.Printf("conn closed, dropping %s/%s\n", player.Name, player.UUID)
 				connclosed = true
 				delete(conns, player.Key())
+				delete(timeoutchans, player.Key())
 				return
 			}
 			log.Println("conn write json failed: ", err)
@@ -178,7 +190,17 @@ func closeerror(err error) bool {
 	return websocket.IsCloseError(err,
 		websocket.CloseNormalClosure,
 		websocket.CloseGoingAway,
-		websocket.CloseAbnormalClosure,
+		websocket.CloseProtocolError,
+		websocket.CloseUnsupportedData,
 		websocket.CloseNoStatusReceived,
+		websocket.CloseAbnormalClosure,
+		websocket.CloseInvalidFramePayloadData,
+		websocket.ClosePolicyViolation,
+		websocket.CloseMessageTooBig,
+		websocket.CloseMandatoryExtension,
+		websocket.CloseInternalServerErr,
+		websocket.CloseServiceRestart,
+		websocket.CloseTryAgainLater,
+		websocket.CloseTLSHandshake,
 	)
 }
