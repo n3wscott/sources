@@ -5,13 +5,12 @@
 function receive(msg) {
   msg = JSON.parse(msg.data); // lol
   console.log("receive:", msg);
-  stat = document.getElementById("status");
+  fish = fish.filter(f => f.nonce != msg.nonce);
   if (msg.type == "eat") {
-    stat.innerHTML = "<span>You were eaten by "+escape(msg.from.name)+".</span><br>"+stat.innerHTML;
-    fish.filter(f => f.nonce != msg.nonce)
+    flash("You were eaten by "+escape(msg.from.name)+".");
   }
   else {
-    stat.innerHTML = "<span>The bear named "+escape(msg.from.name)+" starves tonight.</span><br>"+stat.innerHTML;
+	flash("The bear named "+escape(msg.from.name)+" starves tonight.");
   }
 }
 

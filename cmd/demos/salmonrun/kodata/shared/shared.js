@@ -24,15 +24,18 @@ function connect(name, then) {
       }
 }
 
-function canvas_init() {
+function canvas_init(click_handle) {
   c = document.querySelector("#c");
   c.width = 480;
   c.height = 240;
   cx = c.getContext("2d");
   cx.font = "48px Arial";
+  cx.textAlign = "center"; 
   time = 0;
   frame = 0;
   fish = [];
+
+  c.addEventListener('click', fish_click(click_handle), false);
 
   loop();
 }
@@ -46,8 +49,6 @@ function loop() {
 }
 
 function u(t) {
-  fish = fish.filter(f => f.t <= 3*60)
-
   for (let f of fish) {
     if (!f.ot) {
       f.ot = t
@@ -56,13 +57,49 @@ function u(t) {
     dt = f.t - f.ot;
 
     cx.save();
-    let x = (dt*60*3)%480;
+    let x = (dt*60*3);
     let y = (1/300) * (x-240) ** 2 + 50;
     cx.translate(x, y);
-    cx.rotate(t*Math.PI);
+    cx.rotate(f.ot + dt * Math.PI);
     cx.fillText("🐟", 0, 0);
-    cx.strokeRect(0, 0, 48, -48);
+    //cx.strokeRect(-24, 0, 48, -48);
     cx.restore();
+
+	f.x = x;
+	f.y = y;
+  }
+
+  // delete old fishies
+  fish = fish.filter(f => (f.t - f.ot) <= 3 && (!f.delete))
+}
+
+function fish_click(handle) {
+  return function(ev) {
+	var x = event.pageX - c.offsetLeft;
+	var y = event.pageY - c.offsetTop;
+
+	for (let f of fish) {
+	  if (!f.ot) {
+		continue; // fish hasn't been drawn yet, also missing critical info
+	  }
+	  angle = (f.ot + (f.ot - f.t) * Math.PI);
+	  rcos = Math.cos(angle);
+	  rsin = Math.sin(angle);
+	  centerx = f.x + 24 * rcos; // font is 48 so half of it is 24
+	  centery = f.y + 24 * rsin;
+
+	  console.log(centerx, centery)
+	  console.log("your click: ", x, y)
+
+	  if (((centerx - x)**2 + (centery - y)**2)**0.5 < 48) {
+		handle(f);
+		f.delete = true;
+	  }
+	}
   }
 }
 
+function flash(msg) {
+  stat = document.getElementById("status");
+  stat.innerHTML = "<span>"+msg+"</span><br>"+stat.innerHTML;
+}
