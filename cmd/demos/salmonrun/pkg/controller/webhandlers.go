@@ -49,32 +49,27 @@ func makeWebSocketHandle(callback ConnectionReceiver) http.HandlerFunc {
 func makeSalmonWSReceiver(client cloudevents.Client) ConnectionReceiver {
 	return func(player Player, conn *websocket.Conn) {
 		// TODO it would be nice to have a way to cancel this
+		var msg Message
 		for {
-			mtype, _, err := conn.ReadMessage()
-			if err != nil {
+			if err := conn.ReadJSON(&msg); err != nil {
 				if closeerror(err) {
 					log.Printf("conn closed, dropping %s/%s\n", player.Name, player.UUID)
 					delete(conns, player.Key())
 					return
 				}
-				log.Println("conn read err: ", err)
-				continue
-			} else if mtype != websocket.TextMessage {
-				log.Println("expected text message format, got something else")
+				log.Println("failed to read json msg: ", err)
 				continue
 			}
 
-			// TODO it would be nice to validate the contents of the message.
-			// But it doesn't matter. The salmon only has one thing to say: "jump".
-			log.Printf("Got a websocket message from %s/%s\n", player.Name, player.UUID)
+			log.Printf("Received a websocket message from %s/%s\n", player.Name, player.UUID)
+
+			msg.Type = "jump"
+			msg.From = player
 
 			event := cloudevents.NewEvent()
 			event.SetSource(EVENT_SOURCE)
 			event.SetType(SALMON_EVENT_TYPE)
-			if err := event.SetData(&Message{
-				Type: "jump",
-				From: player,
-			}); err != nil {
+			if err := event.SetData(&msg); err != nil {
 				log.Println("Failed to set cloud event data: ", err)
 				continue
 			}
