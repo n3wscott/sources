@@ -1,0 +1,16 @@
+apiVersion: sources.knative.dev/v1alpha1
+kind: ServiceSource
+metadata:
+  name: salmon
+spec:
+  template:
+    spec:
+      containers:
+        - image: github.com/n3wscott/sources/cmd/demos/salmonrun
+          env:
+            - name: "SALMONRUN_ROLE"
+              value: "salmon"
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Broker
+    name: default

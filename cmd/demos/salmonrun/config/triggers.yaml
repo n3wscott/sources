@@ -1,0 +1,31 @@
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: salmon-trigger
+  namespace: default
+spec:
+  filter:
+    attributes:
+      type: com.github.n3wscott.sources.demos.salmonrun.bear
+  subscriber:
+    ref:
+      apiVersion: sources.knative.dev/v1alpha1
+      kind: ServiceSource
+      name: salmon
+
+---
+
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: bear-trigger
+  namespace: default
+spec:
+  filter:
+    attributes:
+      type: com.github.n3wscott.sources.demos.salmonrun.salmon
+  subscriber:
+    ref:
+      apiVersion: sources.knative.dev/v1alpha1
+      kind: ServiceSource
+      name: bear
