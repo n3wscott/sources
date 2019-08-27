@@ -53,7 +53,7 @@ func makeSalmonWSReceiver(client cloudevents.Client) ConnectionReceiver {
 			mtype, _, err := conn.ReadMessage()
 			if err != nil {
 				if closeerror(err) {
-					log.Println("conn closed, dropping %s/%s\n", player.Name, player.UUID)
+					log.Printf("conn closed, dropping %s/%s\n", player.Name, player.UUID)
 					delete(conns, player.Key())
 					return
 				}
@@ -79,7 +79,9 @@ func makeSalmonWSReceiver(client cloudevents.Client) ConnectionReceiver {
 				continue
 			}
 
-			client.Send(context.Background(), event)
+			if _, err := client.Send(context.Background(), event); err != nil {
+				log.Println("Failed to send cloud event: ", err)
+			}
 		}
 	}
 }
@@ -152,7 +154,9 @@ func makeBearWSReceiver(client cloudevents.Client) ConnectionReceiver {
 				continue
 			}
 
-			client.Send(context.Background(), event)
+			if _, err := client.Send(context.Background(), event); err != nil {
+				log.Println("Failed to send cloud event: ", err)
+			}
 		}
 	}
 }

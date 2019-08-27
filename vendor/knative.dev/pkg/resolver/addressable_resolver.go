@@ -67,6 +67,7 @@ func (r *URIResolver) URIFromDestination(dest apisv1alpha1.Destination, parent i
 	// Prefer resolved object reference + path, then try URI + path, honoring the Destination documentation
 	if dest.ObjectReference != nil {
 		url, err := r.URIFromObjectReference(dest.ObjectReference, parent)
+		url = url.DeepCopy()
 		if err != nil {
 			return "", err
 		}
@@ -74,7 +75,7 @@ func (r *URIResolver) URIFromDestination(dest apisv1alpha1.Destination, parent i
 	}
 
 	if dest.URI != nil {
-		return extendPath(dest.URI, dest.Path).String(), nil
+		return extendPath(dest.URI.DeepCopy(), dest.Path).String(), nil
 	}
 
 	return "", fmt.Errorf("destination missing ObjectReference and URI, expected exactly one")

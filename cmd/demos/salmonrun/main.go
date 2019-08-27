@@ -30,7 +30,7 @@ func main() {
 
 	svr, err := moron.NewServer(&moron.ServerConfig{
 		Port:                  conf.Port,
-		CloudEventReceivePath: "/receive",
+		CloudEventReceivePath: "/",
 		CloudEventTargets:     []string{conf.Sink},
 	})
 	if err != nil {

@@ -29,3 +29,17 @@ spec:
       apiVersion: sources.knative.dev/v1alpha1
       kind: ServiceSource
       name: bear
+
+---
+
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: all-trigger
+  namespace: default
+spec:
+  subscriber:
+    ref:
+      apiVersion: serving.knative.dev/v1alpha1
+      kind: Service
+      name: sockeye

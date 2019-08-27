@@ -28,6 +28,6 @@ func RegisterHandlers(svr *moron.Server, role, datapath string) error {
 		return fmt.Errorf("unknown role %q", role)
 	}
 
-	svr.Handle("/", withLog(http.FileServer(http.Dir(path.Join(datapath, role)))))
+	svr.Handle("/static/", withLog(http.StripPrefix("/static", http.FileServer(http.Dir(path.Join(datapath, role))))))
 	return nil
 }
