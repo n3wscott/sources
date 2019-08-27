@@ -11,6 +11,7 @@ function receive(msg) {
   }
   else {
 	flash("The bear named "+escape(msg.from.name)+" starves tonight.");
+	addpoint();
   }
 }
 

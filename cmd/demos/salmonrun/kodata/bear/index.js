@@ -18,6 +18,7 @@ function eat(f) {
     "nonce": f.msg.nonce,
   }));
   flash("You ate "+escape(f.msg.from.name)+", yum!");
+  addpoint();
 }
 
 function enter_game() {

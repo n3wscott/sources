@@ -103,3 +103,8 @@ function flash(msg) {
   stat = document.getElementById("status");
   stat.innerHTML = "<span>"+msg+"</span><br>"+stat.innerHTML;
 }
+
+function addpoint() {
+	pointbox = document.getElementById("points")
+	pointbox.innerHTML = parseInt(pointbox.innerHTML)+1
+}
