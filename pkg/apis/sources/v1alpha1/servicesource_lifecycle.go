@@ -32,7 +32,7 @@ const (
 	ServiceSourceConditionReady = apis.ConditionReady
 
 	serviceDeployingReason  = "Deploying"
-	serviceDeployingMessage = "Service created; awaiting readiness"
+	serviceDeployingMessage = "Awaiting readiness"
 )
 
 var serviceSourceCondSet = apis.NewLivingConditionSet(
