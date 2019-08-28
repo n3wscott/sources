@@ -82,7 +82,7 @@ function fish_click(handle) {
 	  if (!f.ot) {
 		continue; // fish hasn't been drawn yet, also missing critical info
 	  }
-	  angle = (f.ot + (f.ot - f.t) * Math.PI);
+	  angle = (f.ot + (f.t - f.ot) * Math.PI);
 	  rcos = Math.cos(angle);
 	  rsin = Math.sin(angle);
 	  centerx = f.x + 24 * rcos; // font is 48 so half of it is 24
@@ -91,7 +91,7 @@ function fish_click(handle) {
 	  console.log(centerx, centery)
 	  console.log("your click: ", x, y)
 
-	  if (((centerx - x)**2 + (centery - y)**2)**0.5 < 48) {
+	  if (((centerx - x)**2 + (centery - y)**2)**0.5 < 24) {
 		handle(f);
 		f.delete = true;
 	  }
