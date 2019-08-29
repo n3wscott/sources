@@ -25,22 +25,24 @@ import (
 )
 
 // SetDefaults implements apis.Defaultable
-func (js *JobSource) SetDefaults(ctx context.Context) {
-	js.Spec.SetDefaults(ctx)
+func (s *JobSource) SetDefaults(ctx context.Context) {
+	s.Spec.BaseSourceSpec.SetDefaults(ctx)
 
 	// Use the documented default for the embedded JobSpec.
 	// See k8s.io/api/batch/v1.JobSpec.BackoffLimit.
-	if js.Spec.BackoffLimit == nil {
-		js.Spec.BackoffLimit = ptr.Int32(6)
+	if s.Spec.BackoffLimit == nil {
+		s.Spec.BackoffLimit = ptr.Int32(6)
 	}
 
-	// Kubernetes defaults this to "Always", which is not valid for jobs.
-	// Set something valid and sane for this job.
-	if tSpec := &js.Spec.Template.Spec; tSpec.RestartPolicy == "" {
-		if *js.Spec.BackoffLimit > 0 {
-			tSpec.RestartPolicy = corev1.RestartPolicyOnFailure
-		} else {
+	// Kubernetes defaults the template spec RestartPolicy to "Always",
+	// which is not valid for jobs.
+	// Choose a default that makes sense given the BackoffLimit.
+	if tSpec := &s.Spec.Template.Spec; tSpec.RestartPolicy == "" {
+		if s.Spec.BackoffLimit == nil || *s.Spec.BackoffLimit <= 0 {
+			// No back off limit; don't recreate jobs forever
 			tSpec.RestartPolicy = corev1.RestartPolicyNever
+		} else {
+			tSpec.RestartPolicy = corev1.RestartPolicyOnFailure
 		}
 	}
 }
