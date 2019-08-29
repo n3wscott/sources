@@ -28,6 +28,10 @@ type FakeSourcesV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeSourcesV1alpha1) CronJobSources(namespace string) v1alpha1.CronJobSourceInterface {
+	return &FakeCronJobSources{c, namespace}
+}
+
 func (c *FakeSourcesV1alpha1) JobSources(namespace string) v1alpha1.JobSourceInterface {
 	return &FakeJobSources{c, namespace}
 }

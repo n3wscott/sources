@@ -23,8 +23,6 @@ import (
 )
 
 const (
-	noCronJobReason = "NoCronJob"
-
 	CronJobSourceConditionReady = apis.ConditionReady
 
 	// SinkProvided is inherited from the base status.
@@ -67,8 +65,8 @@ func (s *CronJobSourceStatus) MarkCronJobCreated() {
 }
 
 // MarkCronJobCreated sets the condition that the CronJobSource does not yet have a CronJob.
-func (s *CronJobSourceStatus) MarkNoCronJob(msgFmt string, messageA ...interface{}) {
-	cronJobCondSet.Manage(s).MarkFalse(CronJobSourceConditionCronJobCreated, noCronJobReason, msgFmt, messageA...)
+func (s *CronJobSourceStatus) MarkNoCronJob(reason, msgFmt string, messageA ...interface{}) {
+	cronJobCondSet.Manage(s).MarkFalse(CronJobSourceConditionCronJobCreated, reason, msgFmt, messageA...)
 }
 
 func (s *CronJobSourceStatus) PropagateCronJobStatus(from *batchv1beta1.CronJobStatus) {

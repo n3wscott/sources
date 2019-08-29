@@ -27,6 +27,7 @@ import (
 
 type SourcesV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	CronJobSourcesGetter
 	JobSourcesGetter
 	ServiceSourcesGetter
 }
@@ -34,6 +35,10 @@ type SourcesV1alpha1Interface interface {
 // SourcesV1alpha1Client is used to interact with features provided by the sources.knative.dev group.
 type SourcesV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *SourcesV1alpha1Client) CronJobSources(namespace string) CronJobSourceInterface {
+	return newCronJobSources(c, namespace)
 }
 
 func (c *SourcesV1alpha1Client) JobSources(namespace string) JobSourceInterface {
