@@ -31,7 +31,7 @@ const (
 	CronJobSourceConditionCronJobCreated apis.ConditionType = "CronJobCreated"
 )
 
-var cronJobCondSet = apis.NewBatchConditionSet(
+var cronJobCondSet = apis.NewLivingConditionSet(
 	SourceConditionSinkProvided,
 	CronJobSourceConditionCronJobCreated,
 )
@@ -42,21 +42,21 @@ func (js *CronJobSource) GetGroupVersionKind() schema.GroupVersionKind {
 }
 
 func (s *CronJobSourceStatus) InitializeConditions() {
-	jobCondSet.Manage(s).InitializeConditions()
+	cronJobCondSet.Manage(s).InitializeConditions()
 }
 
 // Ready returns true if the CronJobSource has a sink and a CronJob.
 func (s *CronJobSourceStatus) Ready() bool {
-	return jobCondSet.Manage(s).IsHappy()
+	return cronJobCondSet.Manage(s).IsHappy()
 }
 
 // MarkSink sets the conditions that the source has received a sink URI.
 func (s *CronJobSourceStatus) MarkSink(uri string) {
-	s.BaseSourceStatus.MarkSink(jobCondSet.Manage(s), uri)
+	s.BaseSourceStatus.MarkSink(cronJobCondSet.Manage(s), uri)
 }
 
 func (s *CronJobSourceStatus) MarkNoSink(reason, messageFormat string, messageA ...interface{}) {
-	s.BaseSourceStatus.MarkNoSink(jobCondSet.Manage(s), reason, messageFormat, messageA...)
+	s.BaseSourceStatus.MarkNoSink(cronJobCondSet.Manage(s), reason, messageFormat, messageA...)
 }
 
 // MarkCronJobCreated sets the condition that the CronJobSource owns a CronJob.

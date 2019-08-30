@@ -18,6 +18,7 @@ metadata:
   name: servicesources.sources.knative.dev
   labels:
     sources.knative.dev/release: devel
+    eventing.knative.dev/source: "true"
     knative.dev/crd-install: "true"
 spec:
   group: sources.knative.dev

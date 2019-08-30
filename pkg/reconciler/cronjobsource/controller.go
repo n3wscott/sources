@@ -20,9 +20,9 @@ import (
 	"context"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
-	jsinformer "github.com/n3wscott/sources/pkg/client/injection/informers/sources/v1alpha1/jobsource"
+	cjsinformer "github.com/n3wscott/sources/pkg/client/injection/informers/sources/v1alpha1/cronjobsource"
 	"github.com/n3wscott/sources/pkg/reconciler"
-	jobinformer "knative.dev/pkg/injection/informers/kubeinformers/batchv1/job"
+	cronjobinformer "knative.dev/pkg/injection/informers/kubeinformers/batchv1beta1/cronjob"
 
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/configmap"
@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	controllerAgentName = "jobsource-controller"
+	controllerAgentName = "cronjobsource-controller"
 )
 
 // NewController returns a new HPA reconcile controller.
@@ -39,20 +39,20 @@ func NewController(
 	cmw configmap.Watcher,
 ) *controller.Impl {
 
-	jsInformer := jsinformer.Get(ctx)
-	jobInformer := jobinformer.Get(ctx)
+	cjsInformer := cjsinformer.Get(ctx)
+	cronJobInformer := cronjobinformer.Get(ctx)
 
 	r := &Reconciler{
 		Base:   reconciler.NewBase(ctx, "CronJobSource", cmw),
-		Lister: jsInformer.Lister(),
+		Lister: cjsInformer.Lister(),
 	}
 	impl := controller.NewImpl(r, r.Logger, "CronJobSources")
 
 	r.Logger.Info("Setting up event handlers for CronJobSources")
 
-	jsInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	cjsInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	jobInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+	cronJobInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 		FilterFunc: controller.Filter(v1alpha1.SchemeGroupVersion.WithKind("CronJobSource")),
 		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
 	})

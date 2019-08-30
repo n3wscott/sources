@@ -43,7 +43,7 @@ kubectl create secret generic db-creds --from-file=./path/to/credentials/db-svc-
 ```
 Be sure to change the path to your actual credential file.
 
-Open `event-replay.yaml` and make sure all the fields are correct:
+Open `config/event-replay.yaml` and make sure all the fields are correct:
 1. The environment variable `FROM_COLLECTION` should be the collection you would
    like to query. You do not need to change this if you generated data with
    `gen-fake-events`.
@@ -59,7 +59,7 @@ Open `event-replay.yaml` and make sure all the fields are correct:
 
 Finally, create the event replay JobSource.
 ```bash
-ko create -f event-replay.yaml
+ko create -f config/event-replay.yaml
 ```
 
 Monitor its status with `kubectl get jobsources`.

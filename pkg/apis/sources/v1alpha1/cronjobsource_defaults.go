@@ -18,11 +18,17 @@ package v1alpha1
 
 import (
 	"context"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 // SetDefaults implements apis.Defaultable
 func (s *CronJobSource) SetDefaults(ctx context.Context) {
 	s.Spec.BaseSourceSpec.SetDefaults(ctx)
 
-	// TODO(spencer-p) Set Job Template defaults (restart policy?)
+	// TODO(spencer-p) Is this a good default? Look at k8s docs
+	restartPolicy := &s.Spec.JobTemplate.Spec.Template.Spec.RestartPolicy
+	if *restartPolicy == "" || *restartPolicy == corev1.RestartPolicyAlways {
+		*restartPolicy = corev1.RestartPolicyNever
+	}
 }

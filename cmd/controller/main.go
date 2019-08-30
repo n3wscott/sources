@@ -18,6 +18,7 @@ package main
 
 import (
 	// The set of controllers this controller process runs.
+	"github.com/n3wscott/sources/pkg/reconciler/cronjobsource"
 	"github.com/n3wscott/sources/pkg/reconciler/jobsource"
 	"github.com/n3wscott/sources/pkg/reconciler/servicesource"
 
@@ -28,6 +29,7 @@ import (
 func main() {
 	sharedmain.Main("controller",
 		jobsource.NewController,
+		cronjobsource.NewController,
 		servicesource.NewController,
 	)
 }

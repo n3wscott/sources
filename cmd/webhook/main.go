@@ -112,20 +112,24 @@ func SharedMain(handlers map[schema.GroupVersionKind]webhook.GenericCRD, factori
 		SecretName:     "webhook-certs",
 		WebhookName:    fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
 	}
-	controller := webhook.AdmissionController{
-		Client:                kubeClient,
-		Options:               options,
-		Handlers:              handlers,
-		Logger:                logger,
-		DisallowUnknownFields: true,
 
-		WithContext: func(ctx context.Context) context.Context {
+	controller, err := webhook.NewAdmissionController(
+		kubeClient,
+		options,
+		handlers,
+		logger,
+		func(ctx context.Context) context.Context {
 			for _, store := range stores {
 				ctx = store.ToContext(ctx)
 			}
 			return ctx
 		},
+		true,
+	)
+	if err != nil {
+		logger.Fatalw("Failed to create admission controller", zap.Error(err))
 	}
+
 	if err = controller.Run(ctx.Done()); err != nil {
 		logger.Fatalw("Failed to start the admission controller", zap.Error(err))
 	}
@@ -134,6 +138,7 @@ func SharedMain(handlers map[schema.GroupVersionKind]webhook.GenericCRD, factori
 func main() {
 	handlers := map[schema.GroupVersionKind]webhook.GenericCRD{
 		v1alpha1.SchemeGroupVersion.WithKind("JobSource"):     &v1alpha1.JobSource{},
+		v1alpha1.SchemeGroupVersion.WithKind("CronJobSource"): &v1alpha1.CronJobSource{},
 		v1alpha1.SchemeGroupVersion.WithKind("ServiceSource"): &v1alpha1.ServiceSource{},
 	}
 	SharedMain(handlers)
