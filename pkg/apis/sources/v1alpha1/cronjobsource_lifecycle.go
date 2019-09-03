@@ -71,4 +71,5 @@ func (s *CronJobSourceStatus) MarkNoCronJob(reason, msgFmt string, messageA ...i
 
 func (s *CronJobSourceStatus) PropagateCronJobStatus(from *batchv1beta1.CronJobStatus) {
 	from.DeepCopyInto(&s.CronJobStatus)
+	s.ActiveCount = len(from.Active)
 }

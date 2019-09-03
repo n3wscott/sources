@@ -1,10 +1,9 @@
 package client
 
 import (
-	"time"
-
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/google/uuid"
+	"time"
 )
 
 // EventDefaulter is the function signature for extensions that are able

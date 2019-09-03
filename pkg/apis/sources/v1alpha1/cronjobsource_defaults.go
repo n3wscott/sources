@@ -19,6 +19,8 @@ package v1alpha1
 import (
 	"context"
 
+	"knative.dev/pkg/ptr"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -30,5 +32,9 @@ func (s *CronJobSource) SetDefaults(ctx context.Context) {
 	restartPolicy := &s.Spec.JobTemplate.Spec.Template.Spec.RestartPolicy
 	if *restartPolicy == "" || *restartPolicy == corev1.RestartPolicyAlways {
 		*restartPolicy = corev1.RestartPolicyNever
+	}
+
+	if s.Spec.Suspend == nil {
+		s.Spec.Suspend = ptr.Bool(false)
 	}
 }

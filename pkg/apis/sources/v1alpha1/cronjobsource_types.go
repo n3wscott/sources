@@ -58,6 +58,12 @@ type CronJobSourceSpec struct {
 type CronJobSourceStatus struct {
 	BaseSourceStatus           `json:",inline"`
 	batchv1beta1.CronJobStatus `json:",inline"`
+
+	// ActiveCount stores the length of the CronJobStatus.Active array.
+	// This allows the controller to compute the length which can then be easily
+	// parsed by kubectl, etc. K8s has special sauce to do this automatically
+	// when getting resources, but we have to do it manually.
+	ActiveCount int `json:"activeCount"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -36,7 +36,6 @@ spec:
   subresources:
     status: {}
   additionalPrinterColumns:
-
   - name: Schedule
     type: string
     JSONPath: ".spec.schedule"
@@ -45,11 +44,13 @@ spec:
     JSONPath: ".spec.suspend"
   - name: Active
     type: integer
-    JSONPath: ".status.active.length()"
+    JSONPath: ".status.activeCount"
   - name: Last Schedule
     type: date
     JSONPath: ".status.lastScheduleTime"
-    # TODO add age
+  - name: Age
+    type: date
+    JSONPath: ".metadata.creationTimestamp"
   - name: Ready
     type: string
     JSONPath: ".status.conditions[?(@.type=='Ready')].status"

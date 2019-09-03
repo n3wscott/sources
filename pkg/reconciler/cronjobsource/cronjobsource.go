@@ -146,6 +146,7 @@ func (r *Reconciler) reconcileCronJob(ctx context.Context, s *v1alpha1.CronJobSo
 		}
 
 		s.Status.MarkCronJobCreated()
+		s.Status.PropagateCronJobStatus(&cronjob.Status)
 		return nil
 	} else if err != nil {
 		r.Logger.Warnw("Failed get:", zap.Error(err))
@@ -161,7 +162,8 @@ func (r *Reconciler) reconcileCronJob(ctx context.Context, s *v1alpha1.CronJobSo
 		r.Logger.Desugar().Info("CronJob updated.",
 			zap.Error(err), zap.Any("cronjob", cronjob), zap.String("diff", diff))
 		// TODO(spencer-p) What should the status be at this point?
-		//source.Status.MarkCronJobCreated()
+		s.Status.MarkCronJobCreated()
+		s.Status.PropagateCronJobStatus(&cronjob.Status)
 		return err
 	}
 
