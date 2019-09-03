@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="./shared/style.css">
+<title>Salmon Run</title>
+
+<p>You are the salmon.</p>
+
+<div id="entergame">
+  <p>
+  Username: <input type="text" id="name" name="name" autocomplete="false">
+  <button onclick="enter_game()">Enter game</button>
+  </p>
+</div>
+
+<div id="game" style="display: none">
+  <p>This is the game, I guess.</p>
+  <canvas id=c></canvas>
+  <p><button onclick="jump()">Jump</button></p>
+  <p><span id="points">0</span> points</p>
+  <p><div id="status"></div></p>
+</div>
+
+<script type="text/javascript" src="./shared/shared.js"></script>
+<script type="text/javascript" src="./index.js"></script>

@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
 const (
@@ -29,6 +30,9 @@ const (
 	// ServiceSourceConditionReady is the happy condition for a service source, true if there is
 	// a ready service with a properly configured sink.
 	ServiceSourceConditionReady = apis.ConditionReady
+
+	serviceDeployingReason  = "Deploying"
+	serviceDeployingMessage = "Awaiting readiness"
 )
 
 var serviceSourceCondSet = apis.NewLivingConditionSet(
@@ -62,10 +66,30 @@ func (s *ServiceSourceStatus) MarkServiceReady() {
 	serviceSourceCondSet.Manage(s).MarkTrue(ServiceSourceConditionServiceReady)
 }
 
-func (s *ServiceSourceStatus) MarkServiceReadyUnknown(messageFormat string, messageA ...interface{}) {
-	serviceSourceCondSet.Manage(s).MarkUnknown(ServiceSourceConditionServiceReady, jobRunningReason, messageFormat, messageA...)
+func (s *ServiceSourceStatus) MarkServiceReadyUnknown(reason string, messageFormat string, messageA ...interface{}) {
+	serviceSourceCondSet.Manage(s).MarkUnknown(ServiceSourceConditionServiceReady, reason, messageFormat, messageA...)
+}
+
+func (s *ServiceSourceStatus) MarkServiceDeploying() {
+	serviceSourceCondSet.Manage(s).MarkUnknown(ServiceSourceConditionServiceReady, serviceDeployingReason, serviceDeployingMessage)
 }
 
 func (s *ServiceSourceStatus) MarkServiceNotReady(reason, messageFormat string, messageA ...interface{}) {
 	serviceSourceCondSet.Manage(s).MarkFalse(ServiceSourceConditionServiceReady, reason, messageFormat, messageA...)
+}
+
+func (s *ServiceSourceStatus) MarkAddress(addr *duckv1beta1.Addressable) {
+	s.AddressStatus.Address = addr.DeepCopy()
+}
+
+func (s *ServiceSourceStatus) MarkNoAddress() {
+	s.AddressStatus.Address = nil
+}
+
+func (s *ServiceSourceStatus) MarkURL(url *apis.URL) {
+	s.URL = url.DeepCopy()
+}
+
+func (s *ServiceSourceStatus) MarkNoURL() {
+	s.URL = nil
 }

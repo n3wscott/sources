@@ -114,7 +114,7 @@ func (r *Reconciler) reconcile(ctx context.Context, js *v1alpha1.JobSource) erro
 	js.Status.InitializeConditions()
 
 	// Having a sink is a prereq for starting the job, so we reconcile the sink first
-	if err := r.reconcileSink(ctx, js); err != nil {
+	if err := r.ReconcileSink(ctx, js); err != nil {
 		return err
 	}
 
@@ -163,31 +163,6 @@ func (r *Reconciler) reconcileJob(ctx context.Context, js *v1alpha1.JobSource) e
 			js.Status.MarkJobRunning("Job %q already exists.", job.Name)
 		}
 	}
-
-	return nil
-}
-
-// reconcileSink attempts to reconcile the sink object reference to a URI and set the sink in the JobSourceStatus.
-func (r *Reconciler) reconcileSink(ctx context.Context, js *v1alpha1.JobSource) error {
-	if js.Spec.Sink.ObjectReference == nil && js.Spec.Sink.URI == nil {
-		js.Status.MarkNoSink("Missing", "Sink missing from spec")
-		return errSinkMissing
-	}
-
-	dest := js.Spec.Sink
-
-	// If using the ObjectReference w/o a namespace, mirror the source's ns
-	if dest.ObjectReference != nil && dest.ObjectReference.Namespace == "" {
-		dest.ObjectReference.Namespace = js.Namespace
-	}
-
-	uri, err := r.SinkResolver.URIFromDestination(dest, js)
-	if err != nil {
-		js.Status.MarkNoSink("NotFound", "Could not resolve sink URI: %v", err)
-		return err
-	}
-
-	js.Status.MarkSink(uri)
 
 	return nil
 }

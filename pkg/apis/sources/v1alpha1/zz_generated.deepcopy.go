@@ -22,6 +22,7 @@ package v1alpha1
 
 import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	apis "knative.dev/pkg/apis"
 	v1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 )
 
@@ -243,6 +244,12 @@ func (in *ServiceSourceSpec) DeepCopy() *ServiceSourceSpec {
 func (in *ServiceSourceStatus) DeepCopyInto(out *ServiceSourceStatus) {
 	*out = *in
 	in.BaseSourceStatus.DeepCopyInto(&out.BaseSourceStatus)
+	in.AddressStatus.DeepCopyInto(&out.AddressStatus)
+	if in.URL != nil {
+		in, out := &in.URL, &out.URL
+		*out = new(apis.URL)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

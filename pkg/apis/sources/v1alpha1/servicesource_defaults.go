@@ -23,5 +23,7 @@ import (
 // SetDefaults implements apis.Defaultable
 func (s *ServiceSource) SetDefaults(ctx context.Context) {
 	s.Spec.BaseSourceSpec.SetDefaults(ctx)
+
+	// If serving changes their API, this could create problems.
 	s.Spec.ServiceSpec.SetDefaults(ctx)
 }

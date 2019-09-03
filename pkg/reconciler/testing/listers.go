@@ -17,7 +17,6 @@ limitations under the License.
 package testing
 
 import (
-	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	sourcesv1alpha1 "github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	fakesourcesclientset "github.com/n3wscott/sources/pkg/client/clientset/versioned/fake"
 	sourceslisters "github.com/n3wscott/sources/pkg/client/listers/sources/v1alpha1"
@@ -35,8 +34,10 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	rbacv1listers "k8s.io/client-go/listers/rbac/v1"
 	"k8s.io/client-go/tools/cache"
+	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	fakesharedclientset "knative.dev/pkg/client/clientset/versioned/fake"
 	"knative.dev/pkg/reconciler/testing"
+	fakeservingclientset "knative.dev/serving/pkg/client/clientset/versioned/fake"
 )
 
 var subscriberAddToScheme = func(scheme *runtime.Scheme) error {
@@ -53,6 +54,7 @@ var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
 	fakesharedclientset.AddToScheme,
 	fakeeventingclientset.AddToScheme,
+	fakeservingclientset.AddToScheme,
 	fakesourcesclientset.AddToScheme,
 	fakeapiextensionsclientset.AddToScheme,
 	subscriberAddToScheme,
@@ -102,6 +104,10 @@ func (l *Listers) GetEventingObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingclientset.AddToScheme)
 }
 
+func (l *Listers) GetServingObjects() []runtime.Object {
+	return l.sorter.ObjectsForSchemeFunc(fakeservingclientset.AddToScheme)
+}
+
 func (l *Listers) GetSinkObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(sinkAddToScheme)
 }
@@ -109,6 +115,7 @@ func (l *Listers) GetSinkObjects() []runtime.Object {
 func (l *Listers) GetAllObjects() []runtime.Object {
 	return l.GetObjectsFrom(
 		l.GetEventingObjects,
+		l.GetServingObjects,
 		l.GetSinkObjects,
 		l.GetKubeObjects,
 	)
@@ -132,6 +139,10 @@ func (l *Listers) GetSharedObjects() []runtime.Object {
 
 func (l *Listers) GetJobSourceLister() sourceslisters.JobSourceLister {
 	return sourceslisters.NewJobSourceLister(l.indexerFor(&sourcesv1alpha1.JobSource{}))
+}
+
+func (l *Listers) GetServiceSourceLister() sourceslisters.ServiceSourceLister {
+	return sourceslisters.NewServiceSourceLister(l.indexerFor(&sourcesv1alpha1.ServiceSource{}))
 }
 
 func (l *Listers) GetDeploymentLister() appsv1listers.DeploymentLister {

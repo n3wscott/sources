@@ -20,6 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"knative.dev/pkg/apis"
+	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	apisv1alpha1 "knative.dev/pkg/apis/v1alpha1"
 	"knative.dev/pkg/kmeta"
 	servingv1beta1 "knative.dev/serving/pkg/apis/serving/v1beta1"
 )
@@ -57,6 +59,13 @@ type ServiceSourceSpec struct {
 // ServiceSourceStatus communicates the observed state of the ServiceSource (from the controller).
 type ServiceSourceStatus struct {
 	BaseSourceStatus `json:",inline"`
+
+	// ServiceSource is an AddressableType via inheriting its Service's address status.
+	// This enables the ServiceSource to also be a sink.
+	duckv1beta1.AddressStatus `json:",inline"`
+
+	// URL is the ServiceSource's pretty/public address.
+	URL *apis.URL `json:"url,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -67,4 +76,12 @@ type ServiceSourceList struct {
 	metav1.ListMeta `json:"metadata"`
 
 	Items []ServiceSource `json:"items"`
+}
+
+func (s *ServiceSource) GetSink() apisv1alpha1.Destination {
+	return s.Spec.Sink
+}
+
+func (s *ServiceSource) GetStatus() SourceStatus {
+	return &s.Status
 }

@@ -29,10 +29,11 @@ import (
 	"knative.dev/pkg/logging"
 	logtesting "knative.dev/pkg/logging/testing"
 
-	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	fakesourcesclient "github.com/n3wscott/sources/pkg/client/injection/client/fake"
+	fakeeventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	fakedynamicclient "knative.dev/pkg/injection/clients/dynamicclient/fake"
 	fakekubeclient "knative.dev/pkg/injection/clients/kubeclient/fake"
+	fakeservingclient "knative.dev/serving/pkg/client/injection/client/fake"
 
 	. "knative.dev/pkg/reconciler/testing"
 )
@@ -58,6 +59,7 @@ func MakeFactory(ctor Ctor) Factory {
 		ctx, kubeClient := fakekubeclient.With(ctx, ls.GetKubeObjects()...)
 		ctx, client := fakesourcesclient.With(ctx, ls.GetSourcesObjects()...)
 		ctx, eventingclient := fakeeventingclient.With(ctx, ls.GetEventingObjects()...)
+		ctx, servingclient := fakeservingclient.With(ctx, ls.GetServingObjects()...)
 
 		dynamicScheme := runtime.NewScheme()
 		for _, addTo := range clientSetSchemes {
@@ -100,7 +102,7 @@ func MakeFactory(ctor Ctor) Factory {
 			return ValidateUpdates(context.Background(), action)
 		})
 
-		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient, eventingclient}
+		actionRecorderList := ActionRecorderList{dynamicClient, client, kubeClient, eventingclient, servingclient}
 		eventList := EventList{Recorder: eventRecorder}
 
 		return c, actionRecorderList, eventList, statsReporter

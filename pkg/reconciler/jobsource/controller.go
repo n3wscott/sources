@@ -48,7 +48,7 @@ func NewController(
 	}
 	impl := controller.NewImpl(r, r.Logger, "JobSources")
 
-	r.Logger.Info("Setting up event handlers")
+	r.Logger.Info("Setting up event handlers for JobSources")
 
 	jsInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 

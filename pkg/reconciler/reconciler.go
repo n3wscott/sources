@@ -18,12 +18,18 @@ package reconciler
 
 import (
 	"context"
+	"errors"
 
+	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	clientset "github.com/n3wscott/sources/pkg/client/clientset/versioned"
 	sourcesclient "github.com/n3wscott/sources/pkg/client/injection/client"
 	eventingreconciler "knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/resolver"
+)
+
+var (
+	ErrSinkMissing = errors.New("Sink missing from spec")
 )
 
 // Base is a set of tools that source reconcilers need.
@@ -52,4 +58,28 @@ func NewBase(ctx context.Context, controllerAgentName string, cmw configmap.Watc
 	base.SinkResolver = resolver.NewURIResolver(ctx, func(_ string) {})
 
 	return base
+}
+
+func (r *Base) ReconcileSink(ctx context.Context, source v1alpha1.Source) error {
+	dest := source.GetSink()
+
+	if dest.ObjectReference == nil && dest.URI == nil {
+		source.GetStatus().MarkNoSink("Missing", "Sink missing from spec")
+		return ErrSinkMissing
+	}
+
+	// If using the ObjectReference w/o a namespace, mirror the source's ns
+	if dest.ObjectReference != nil && dest.ObjectReference.Namespace == "" {
+		dest.ObjectReference.Namespace = source.GetNamespace()
+	}
+
+	uri, err := r.SinkResolver.URIFromDestination(dest, source)
+	if err != nil {
+		source.GetStatus().MarkNoSink("NotFound", "Could not resolve sink URI: %v", err)
+		return err
+	}
+
+	source.GetStatus().MarkSink(uri)
+
+	return nil
 }

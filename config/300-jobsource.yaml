@@ -41,3 +41,6 @@ spec:
   - name: Reason
     type: string
     JSONPath: ".status.conditions[?(@.type=='Succeeded')].reason"
+  - name: Message
+    type: string
+    JSONPath: ".status.conditions[?(@.type=='Succeeded')].message"

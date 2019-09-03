@@ -98,14 +98,18 @@ missing field(s): outputFormat`,
 }
 
 func TestSourceDuckTypes(t *testing.T) {
-	sources := []interface{}{
-		&JobSource{},
-		&ServiceSource{},
+	tests := []struct {
+		source interface{}
+		iface  duck.Implementable
+	}{
+		{&JobSource{}, &duckv1beta1.Source{}},
+		{&ServiceSource{}, &duckv1beta1.Source{}},
+		{&ServiceSource{}, &duckv1beta1.Addressable{}},
 	}
-	for _, source := range sources {
-		err := duck.VerifyType(source, &duckv1beta1.Source{})
+	for _, test := range tests {
+		err := duck.VerifyType(test.source, test.iface)
 		if err != nil {
-			t.Errorf("VerifyType(%T, duckv1beta1.Source) = %v", source, err)
+			t.Errorf("VerifyType(%T, %T) = %v", test.source, test.iface, err)
 		}
 	}
 }

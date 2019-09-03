@@ -19,6 +19,7 @@ package main
 import (
 	// The set of controllers this controller process runs.
 	"github.com/n3wscott/sources/pkg/reconciler/jobsource"
+	"github.com/n3wscott/sources/pkg/reconciler/servicesource"
 
 	// This defines the shared main for injected controllers.
 	"knative.dev/pkg/injection/sharedmain"
@@ -27,5 +28,6 @@ import (
 func main() {
 	sharedmain.Main("controller",
 		jobsource.NewController,
+		servicesource.NewController,
 	)
 }
