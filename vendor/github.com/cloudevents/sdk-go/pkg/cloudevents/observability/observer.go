@@ -27,11 +27,12 @@ type Reporter interface {
 }
 
 type reporter struct {
-	ctx   context.Context
-	span  *trace.Span
-	on    Observable
-	start time.Time
-	once  sync.Once
+	ctx     context.Context
+	span    *trace.Span
+	on      Observable
+	start   time.Time
+	measure stats.Measure
+	once    sync.Once
 }
 
 // All tags used for Latency measurements.
