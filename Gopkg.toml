@@ -72,6 +72,10 @@ required = [
   # Needed because this includes the appropriate version of metricsdata
   version = "v0.22.0"
 
+[[override]]
+  name = "github.com/cloudevents/sdk-go"
+  version = "v0.8.0"
+
 [prune]
   go-tests = true
   unused-packages = true
