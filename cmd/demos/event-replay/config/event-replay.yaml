@@ -16,6 +16,9 @@ spec:
           # populated collection (if not using the default).
           - name: FROM_COLLECTION
             value: "purchases"
+          # Replay all events in the last 24h.
+          - name: SINCE
+            value: "24h"
           # This is the environment variable that will hold the credentials for
           # Firestore. Make sure to upload your credentials as a secret through
           # Kubernetes.
@@ -29,6 +32,6 @@ spec:
                 key: db-svc-acct.json
   sink:
     # Change the kind and name for the sink as desired.
-    apiVersion: serving.knative.dev/v1alpha1
-    kind: Service
-    name: sockeye
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Broker
+    name: default

@@ -106,12 +106,13 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:7e05fbb13face7af6bf064ca3a8bbd8c4fcaff81e1d6ce430d8075b001ad5b82"
+  digest = "1:0b2ffe5c17b0a3d49cc0a0cc20a13f7e1223fca1cd26587248a6b65c801dd46e"
   name = "github.com/cloudevents/sdk-go"
   packages = [
     ".",
     "pkg/cloudevents",
     "pkg/cloudevents/client",
+    "pkg/cloudevents/codec",
     "pkg/cloudevents/context",
     "pkg/cloudevents/datacodec",
     "pkg/cloudevents/datacodec/json",
@@ -122,8 +123,8 @@
     "pkg/cloudevents/types",
   ]
   pruneopts = "NUT"
-  revision = "9c1f61edb2fefdf4de9ccea47af1648e960f47f8"
-  version = "v0.8.0"
+  revision = "56931988abe3adf6792b5c6e575ee5f573e9ccbc"
+  version = "0.7.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -1194,7 +1195,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ce259047ab64799a355d1917b66edb74c4d9ded2c7113c1d915d4193e6c88996"
+  digest = "1:1a5865d568b1c0a56b5fb24898056798a2a8482631d36b9556bcb045f52bbf35"
   name = "knative.dev/eventing"
   packages = [
     "pkg/apis/duck",
@@ -1216,6 +1217,7 @@
     "pkg/client/clientset/versioned/typed/sources/v1alpha1/fake",
     "pkg/client/injection/client",
     "pkg/client/injection/client/fake",
+    "pkg/kncloudevents",
     "pkg/reconciler",
     "pkg/utils",
   ]
@@ -1224,7 +1226,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:77f51371f0a176e7e7184d0304b26c85c36ef2232be05a0f21d7ffe0f093ca80"
+  digest = "1:2136f236d9ebac05ef1ae159eab39bf197dd985a5b49510b4e21aa37e3b263cd"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1256,6 +1258,7 @@
     "injection/clients/kubeclient",
     "injection/clients/kubeclient/fake",
     "injection/informers/kubeinformers/batchv1/job",
+    "injection/informers/kubeinformers/batchv1beta1/cronjob",
     "injection/informers/kubeinformers/factory",
     "injection/sharedmain",
     "kmeta",
@@ -1280,7 +1283,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "39a29cf1bf26731a221a152373aca5c47b923222"
+  revision = "524f6c5bb21d3525572d8c6097fa8dfc19bfd63b"
 
 [[projects]]
   digest = "1:b448d92f4806a302cd9585564388cda0f09e1ace7abe0f091e5d53d2237f1bcf"
@@ -1387,6 +1390,7 @@
     "google.golang.org/api/option",
     "k8s.io/api/apps/v1",
     "k8s.io/api/batch/v1",
+    "k8s.io/api/batch/v1beta1",
     "k8s.io/api/core/v1",
     "k8s.io/api/rbac/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
@@ -1424,6 +1428,7 @@
     "k8s.io/code-generator/cmd/lister-gen",
     "knative.dev/eventing/pkg/client/clientset/versioned/fake",
     "knative.dev/eventing/pkg/client/injection/client/fake",
+    "knative.dev/eventing/pkg/kncloudevents",
     "knative.dev/eventing/pkg/reconciler",
     "knative.dev/eventing/pkg/utils",
     "knative.dev/pkg/apis",
@@ -1438,6 +1443,7 @@
     "knative.dev/pkg/injection/clients/dynamicclient/fake",
     "knative.dev/pkg/injection/clients/kubeclient/fake",
     "knative.dev/pkg/injection/informers/kubeinformers/batchv1/job",
+    "knative.dev/pkg/injection/informers/kubeinformers/batchv1beta1/cronjob",
     "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/logging",

@@ -85,6 +85,7 @@ func makeSalmonWSReceiver(client cloudevents.Client) ConnectionReceiver {
 			event := cloudevents.NewEvent()
 			event.SetSource(EVENT_SOURCE)
 			event.SetType(SALMON_EVENT_TYPE)
+			event.SetID(msg.Nonce)
 			if err := event.SetData(&msg); err != nil {
 				log.Println("Failed to set cloud event data: ", err)
 				continue
@@ -160,6 +161,7 @@ func makeBearWSReceiver(client cloudevents.Client) ConnectionReceiver {
 			event := cloudevents.NewEvent()
 			event.SetSource(EVENT_SOURCE)
 			event.SetType(BEAR_EVENT_TYPE)
+			event.SetID(msg.Nonce)
 			if err := event.SetData(&msg); err != nil {
 				log.Println("Failed to set cloud event data: ", err)
 				continue

@@ -18,6 +18,7 @@ metadata:
   name: jobsources.sources.knative.dev
   labels:
     sources.knative.dev/release: devel
+    eventing.knative.dev/source: "true"
     knative.dev/crd-install: "true"
 spec:
   group: sources.knative.dev
@@ -29,6 +30,9 @@ spec:
     categories:
     - all
     - knative
+    - eventing
+    - sources
+    - importers
     shortNames:
     - js
   scope: Namespaced

@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: generate-events
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: generate-events
+            image: github.com/n3wscott/sources/cmd/demos/event-replay/gen-fake-events
+            env:
+              - name: COLLECTION
+                value: "purchases"
+              - name: NUMDOCS
+                value: "10"
+              # This is the environment variable that will hold the credentials for
+              # Firestore. Make sure to upload your credentials as a secret through
+              # Kubernetes.
+              # Use the following command. "db-creds" and "db-svc-acct.json" can be
+              # changed as long as they match the name and key fields below.
+              # $ kubectl create secret generic db-creds --from-file=path/to/your/creds/db-svc-acct.json
+              - name: GOOGLE_APPLICATION_CREDS_JSON
+                valueFrom:
+                  secretKeyRef:
+                    name: db-creds
+                    key: db-svc-acct.json

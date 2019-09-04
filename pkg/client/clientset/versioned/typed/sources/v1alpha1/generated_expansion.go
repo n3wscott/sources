@@ -18,6 +18,8 @@ limitations under the License.
 
 package v1alpha1
 
+type CronJobSourceExpansion interface{}
+
 type JobSourceExpansion interface{}
 
 type ServiceSourceExpansion interface{}

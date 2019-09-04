@@ -141,6 +141,10 @@ func (l *Listers) GetJobSourceLister() sourceslisters.JobSourceLister {
 	return sourceslisters.NewJobSourceLister(l.indexerFor(&sourcesv1alpha1.JobSource{}))
 }
 
+func (l *Listers) GetCronJobSourceLister() sourceslisters.CronJobSourceLister {
+	return sourceslisters.NewCronJobSourceLister(l.indexerFor(&sourcesv1alpha1.CronJobSource{}))
+}
+
 func (l *Listers) GetServiceSourceLister() sourceslisters.ServiceSourceLister {
 	return sourceslisters.NewServiceSourceLister(l.indexerFor(&sourcesv1alpha1.ServiceSource{}))
 }

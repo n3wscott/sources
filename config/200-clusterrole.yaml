@@ -37,7 +37,7 @@ rules:
     resources: ["*"]
     verbs: ["get", "list", "create", "update", "delete", "deletecollection", "patch", "watch"]
   - apiGroups: ["batch"]
-    resources: ["jobs"]
+    resources: ["jobs", "cronjobs"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
   - apiGroups: ["serving.knative.dev"]
     resources: ["services"]

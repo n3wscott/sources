@@ -1,0 +1,20 @@
+apiVersion: sources.knative.dev/v1alpha1
+kind: CronJobSource
+metadata:
+  name: hello-cronjob
+spec:
+  sink:
+    # Change the kind and name for the sink as desired.
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Broker
+    name: default
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - image: github.com/n3wscott/sources/cmd/demos/hello-cronjob
+            env:
+              - name: FAIL_ODDS_PERCENT
+                value: "10"
