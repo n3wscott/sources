@@ -74,10 +74,12 @@ spec:
   template:
     spec:
       # containers is a list of containers to run.
-      # As with Knative Services, you can run any number of containers
-      # and distribute traffic between them.
+      # As with Knative Services, you can run any number of containers.
       containers:
       - name: my-container
         image: example.com/container
+  # Traffic can be distributed across multiple versions of containers.
   traffic:
+    - percent: 100
+      latestRevision: true
 ```
