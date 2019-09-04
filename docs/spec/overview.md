@@ -35,8 +35,3 @@ scheduled/aggregated messages to users.
 A ServiceSource is implemented using a Knative Service. This lets an operator
 easily create a Source that is addressable. This allows developers and operators
 to work with 3rd party event sources that communicate via webhooks with ease.
-
-## DeploymentSource
-
-A DeploymentSource creates a Deployment that can send events. This is a common
-and simple use case for just about any kind of no-frills long-lived source.

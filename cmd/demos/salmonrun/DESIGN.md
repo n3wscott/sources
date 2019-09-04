@@ -93,7 +93,7 @@ This will unblock the jump cloud event to send a cloud event response.
 There will be a `/receive` path for CloudEvents.
 
 The salmon will get eat/not eaten responses:
-``go
+```go
 func receive() {
   uname, uuid := from the event
   conn := connectionmap[uname+uuid]
