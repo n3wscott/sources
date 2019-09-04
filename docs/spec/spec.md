@@ -1,5 +1,3 @@
-Lets do https://github.com/knative/serving/blob/master/docs/spec/spec.md style.
-
 # Knative Source API Spec
 
 ## Resource YAML Definitions
@@ -35,12 +33,53 @@ spec:
 
 ### CronJobSource
 
-TODO
+```yaml
+apiVersion: sources.knative.dev/v1alpha1
+kind: CronJobSource
+metadata:
+  name: my-cronjobsource
+spec:
+  sink:
+    # Change the kind and name for the sink as desired.
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Broker
+    name: default
+  # schedule is a required crontab schedule.
+  schedule: "*/20 * * * *"
+  # A jobTemplate is required.
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          # containers is a singleton []corev1.Container.
+          containers:
+          - name: my-container
+            image: example.com/container
+```
 
 ### ServiceSource
 
-TODO
+Also see [Knative Serving Service spec](https://github.com/knative/serving/blob/master/docs/spec/spec.md#service).
 
-### DeploymentSource
-
-TODO
+```yaml
+apiVersion: sources.knative.dev/v1alpha1
+kind: ServiceSource
+metadata:
+  name: my-servicesource
+spec:
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Broker
+    name: default
+  template:
+    spec:
+      # containers is a list of containers to run.
+      # As with Knative Services, you can run any number of containers.
+      containers:
+      - name: my-container
+        image: example.com/container
+  # Traffic can be distributed across multiple versions of containers.
+  traffic:
+    - percent: 100
+      latestRevision: true
+```

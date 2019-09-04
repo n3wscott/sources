@@ -63,11 +63,24 @@ TODO: fill in details, add examples.
 
 ### CronJobSource
 
-TBD
+ - A CronJobSource creates a Kubernetes CronJob resource to create Kubernetes Jobs. All
+   configuration options for a CronJob are available to CronJobSource.
+ - The job temmplate should be idempotent. The Kubernetes CronJob resource may spuriously create an
+   extra job or none at all.
+ - Individual jobs may be destroyed and recreated if the parent CronJobSource spec changes.
+ - Refer to the [CronJob
+   documentation](https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/) for more
+   information.
 
 ### ServiceSource
 
-TBD
+ - The ServiceSource runs a Knative Service and has all configuration options of a ServiceSource
+   available.
+ - Containers must adhere to the runtime contract for Knative Services. This includes reading the
+   port from the environment and responding to liveness probes.
+ - ServicesSources may be stopped and restarted at any time due to scaling up/down.
+ - Refer to [Knative Serving](https://knative.dev/docs/serving/knative-kubernetes-services/) for
+   more information about the Knative Service lifecycle.
 
 ### DeploymentSource
 
