@@ -11,15 +11,21 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"time"
 
 	"cloud.google.com/go/firestore"
+	"github.com/kelseyhightower/envconfig"
+	"google.golang.org/api/option"
 )
 
-const (
-	// The firestore collection we will write to
-	collection = "purchases"
-	numDocs    = 100
-)
+type Config struct {
+	// Options for the generated events
+	Collection string `envconfig:"COLLECTION" default:"purchases"`
+	NumDocs    int    `envconfig:"NUMDOCS" default:"10"`
+
+	// Database credentials
+	ServiceAccountCreds []byte `envconfig:"GOOGLE_APPLICATION_CREDS_JSON" required:"true"`
+}
 
 var (
 	// Change these demo values as needed
@@ -33,6 +39,7 @@ type Purchase struct {
 	CCId    int32
 	Address string
 	Items   []*Item
+	Time    int64
 }
 
 type Item struct {
@@ -53,7 +60,10 @@ func randAddress() string {
 func main() {
 	ctx := context.Background()
 
-	client, err := firestore.NewClient(ctx, firestore.DetectProjectID)
+	var env Config
+	envconfig.MustProcess("", &env)
+
+	client, err := firestore.NewClient(context.Background(), firestore.DetectProjectID, option.WithCredentialsJSON(env.ServiceAccountCreds))
 	if err != nil {
 		log.Fatal("Failed to open firestore client: ", err)
 	}
@@ -65,16 +75,20 @@ func main() {
 		Items: []*Item{&item},
 	}
 
-	log.Printf("Writing documents to collection %q...\n", collection)
-	for i := 0; i < numDocs; i++ {
+	rand.Seed(time.Now().UnixNano())
+
+	log.Printf("Writing documents to collection %q...\n", env.Collection)
+	collRef := client.Collection(env.Collection)
+	for i := 0; i < env.NumDocs; i++ {
 		// Randomize the doc
 		purchase.Name = names[rand.Intn(len(names))]
 		purchase.Address = randAddress()
+		purchase.Time = time.Now().Unix()
 		item.Name = items[rand.Intn(len(items))]
 		item.Price = int32(rand.Intn(10 + 1))
 
 		// Push the data to the DB
-		_, _, err := client.Collection(collection).Add(ctx, purchase)
+		_, _, err := collRef.Add(ctx, purchase)
 		if err != nil {
 			log.Fatal("Failed to commit: ", err)
 		}

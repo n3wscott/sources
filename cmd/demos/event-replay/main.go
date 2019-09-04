@@ -30,15 +30,29 @@ type envConfig struct {
 
 	// Firestore collection to read from
 	Collection string `envconfig:"FROM_COLLECTION" required:"true"`
+
+	// Time frame to replay
+	Since string        `envconfig:"SINCE" default:"0s"`
+	since time.Duration // parsed version of above
 }
 
 func (env *envConfig) replayEvents(dbclient *firestore.Client, ceclient cloudevents.Client) error {
-
+	ctx := context.Background()
 	ticker := time.NewTicker(replaySpeed)
 	defer ticker.Stop()
 
+	var iter *firestore.DocumentIterator
+	if env.since > 0 {
+		// Query documents in the time frame specified
+		cutoff := time.Now().Add(-1 * env.since).Unix()
+		q := dbclient.Collection(env.Collection).Where("Time", ">", cutoff).OrderBy("Time", firestore.Asc)
+		iter = q.Documents(ctx)
+	} else {
+		// Query all documents
+		iter = dbclient.Collection(env.Collection).Documents(ctx)
+	}
+
 	// Iterate through each document and publish it
-	iter := dbclient.Collection(env.Collection).Documents(context.Background())
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -57,7 +71,7 @@ func (env *envConfig) replayEvents(dbclient *firestore.Client, ceclient cloudeve
 			Data: doc.Data(),
 		}
 
-		if _, err := ceclient.Send(context.Background(), event); err != nil {
+		if _, err := ceclient.Send(ctx, event); err != nil {
 			return err
 		}
 
@@ -72,6 +86,11 @@ func main() {
 	if err := envconfig.Process("", &env); err != nil {
 		log.Fatal("Failed to process env: ", err)
 	}
+	since, err := time.ParseDuration(env.Since)
+	if err != nil {
+		log.Fatalf("Invalid duration for time since: %q: %v\n", env.Since, err)
+	}
+	env.since = since
 
 	ceclient, err := ceclient.New(env.OutputFormat, env.Sink)
 	if err != nil {
