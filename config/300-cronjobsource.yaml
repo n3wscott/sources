@@ -30,6 +30,9 @@ spec:
     categories:
     - all
     - knative
+    - eventing
+    - sources
+    - importers
     shortNames:
     - cjs
   scope: Namespaced

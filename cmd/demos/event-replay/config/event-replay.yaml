@@ -32,6 +32,6 @@ spec:
                 key: db-svc-acct.json
   sink:
     # Change the kind and name for the sink as desired.
-    apiVersion: serving.knative.dev/v1alpha1
-    kind: Service
-    name: sockeye
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Broker
+    name: default
