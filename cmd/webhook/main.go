@@ -23,6 +23,7 @@ import (
 	"log"
 
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -140,6 +141,7 @@ func main() {
 		v1alpha1.SchemeGroupVersion.WithKind("JobSource"):     &v1alpha1.JobSource{},
 		v1alpha1.SchemeGroupVersion.WithKind("CronJobSource"): &v1alpha1.CronJobSource{},
 		v1alpha1.SchemeGroupVersion.WithKind("ServiceSource"): &v1alpha1.ServiceSource{},
+		corev1.SchemeGroupVersion.WithKind("Pod"):             &v1alpha1.SourcePod{},
 	}
 	SharedMain(handlers)
 
