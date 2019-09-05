@@ -20,10 +20,11 @@ import (
 	"context"
 	"log"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/pkg/apis"
 
-	corev1 "k8s.io/api/core/v1"
+	"github.com/n3wscott/sources/pkg/sidecar"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -39,11 +40,11 @@ var _ apis.Validatable = &SourcePod{}
 var _ runtime.Object = &SourcePod{}
 
 func (s *SourcePod) SetDefaults(ctx context.Context) {
-	log.Println("Whoop! Someone gave me a pod!")
-}
-
-func (s *SourcePod) ShouldMutate() bool {
-	return true
+	pod := &s.Pod
+	if sidecar.ShouldAddConverter(pod) {
+		log.Println("Adding converter")
+		sidecar.AddConverter(pod)
+	}
 }
 
 func (s *SourcePod) Validate(context.Context) *apis.FieldError {

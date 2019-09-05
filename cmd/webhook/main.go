@@ -125,7 +125,7 @@ func SharedMain(handlers map[schema.GroupVersionKind]webhook.GenericCRD, factori
 			}
 			return ctx
 		},
-		true,
+		false,
 	)
 	if err != nil {
 		logger.Fatalw("Failed to create admission controller", zap.Error(err))

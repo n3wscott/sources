@@ -59,6 +59,8 @@ spec:
               fieldPath: metadata.namespace
         - name: CONFIG_LOGGING_NAME
           value: config-logging
+        - name: K_SOURCE_CONVERT_IMAGE
+          value: github.com/n3wscott/sources/cmd/sidecars/converter
       volumes:
         - name: config-logging
           configMap:
