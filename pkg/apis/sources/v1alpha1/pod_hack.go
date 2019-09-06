@@ -30,9 +30,7 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // SourcePod is an alias for an actual Pod which allows us to put methods on it.
-type SourcePod struct {
-	corev1.Pod `json:",inline"`
-}
+type SourcePod corev1.Pod
 
 // Assert that it satisfies the webhook.GenericCRD interface
 var _ apis.Defaultable = &SourcePod{}
@@ -40,7 +38,7 @@ var _ apis.Validatable = &SourcePod{}
 var _ runtime.Object = &SourcePod{}
 
 func (s *SourcePod) SetDefaults(ctx context.Context) {
-	pod := &s.Pod
+	pod := (*corev1.Pod)(s)
 	if sidecar.ShouldAddConverter(pod) {
 		log.Println("Adding converter")
 		sidecar.AddConverter(pod)
