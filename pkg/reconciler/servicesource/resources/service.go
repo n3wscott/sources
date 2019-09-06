@@ -38,6 +38,13 @@ func MakeService(source *v1alpha1.ServiceSource) *servingv1beta1.Service {
 	}
 	podTemplate.ObjectMeta.Labels[labelKey] = source.GetObjectMeta().GetName()
 
+	if podTemplate.ObjectMeta.Annotations == nil {
+		podTemplate.ObjectMeta.Annotations = make(map[string]string)
+	}
+	for k, v := range js.GetAnnotations() {
+		podTemplate.ObjectMeta.Annotations[k] = v
+	}
+
 	containers := []corev1.Container{}
 	for i, c := range podTemplate.Spec.Containers {
 		if c.Name == "" {

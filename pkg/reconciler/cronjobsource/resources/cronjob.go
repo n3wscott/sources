@@ -50,6 +50,13 @@ func MakeCronJob(s *v1alpha1.CronJobSource) *batchv1beta1.CronJob {
 	}
 	podTemplate.ObjectMeta.Labels[labelKey] = s.GetObjectMeta().GetName()
 
+	if podTemplate.ObjectMeta.Annotations == nil {
+		podTemplate.ObjectMeta.Annotations = make(map[string]string)
+	}
+	for k, v := range js.GetAnnotations() {
+		podTemplate.ObjectMeta.Annotations[k] = v
+	}
+
 	// TODO(spencer-p) Eliminate extra copying here
 	containers := podTemplate.Spec.Template.Spec.Containers
 	for i, _ := range containers {

@@ -25,9 +25,10 @@ import (
 )
 
 const (
-	IMAGE_KEY = "K_SOURCE_CONVERTER_IMAGE"
-
-	CONVERT_PORT = 57070
+	IMAGE_KEY       = "K_SOURCE_CONVERTER_IMAGE"
+	CONVERT_PORT    = 57070
+	ANNOTATION_NAME = "inject-knative-source-converter"
+	SIDECAR_NAME    = "source-converter"
 )
 
 var (
@@ -35,10 +36,20 @@ var (
 )
 
 func ShouldAddConverter(pod *corev1.Pod) bool {
-	should, ok := pod.GetAnnotations()["inject-knative-source-converter"]
+	// Check for the label
+	should, ok := pod.GetAnnotations()[ANNOTATION_NAME]
 	if !ok || should != "true" {
 		return false
 	}
+
+	// Check if we've already done it
+	// TODO(spencer-p) Use a label or annotation to mark this.
+	for _, c := range pod.Spec.Containers {
+		if c.Name == SIDECAR_NAME {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -60,7 +71,8 @@ func AddConverter(pod *corev1.Pod) {
 		Name:  "source-converter",
 		Image: img,
 		Ports: []corev1.ContainerPort{corev1.ContainerPort{
-			HostPort: CONVERT_PORT,
+			HostPort:      CONVERT_PORT,
+			ContainerPort: CONVERT_PORT,
 		}},
 		Env: []corev1.EnvVar{
 			corev1.EnvVar{
@@ -77,7 +89,7 @@ func AddConverter(pod *corev1.Pod) {
 	}
 
 	// Rewire the source container
-	srcSinkURI.Value = "http://localhost:" + CONVERT_PORT_STR
+	srcSinkURI.Value = "http://127.0.0.1:" + CONVERT_PORT_STR
 
 	// Add the convert container
 	pod.Spec.Containers = append(pod.Spec.Containers, convertContainer)

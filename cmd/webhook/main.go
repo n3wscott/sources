@@ -142,6 +142,7 @@ func main() {
 		v1alpha1.SchemeGroupVersion.WithKind("CronJobSource"): &v1alpha1.CronJobSource{},
 		v1alpha1.SchemeGroupVersion.WithKind("ServiceSource"): &v1alpha1.ServiceSource{},
 		corev1.SchemeGroupVersion.WithKind("Pod"):             &v1alpha1.SourcePod{},
+		corev1.SchemeGroupVersion.WithKind("Binding"):         &v1alpha1.EvilBinding{},
 	}
 	SharedMain(handlers)
 

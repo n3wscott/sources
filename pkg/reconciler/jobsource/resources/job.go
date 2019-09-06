@@ -40,6 +40,13 @@ func MakeJob(js *v1alpha1.JobSource) *batchv1.Job {
 	}
 	podTemplate.ObjectMeta.Labels[labelKey] = js.GetObjectMeta().GetName()
 
+	if podTemplate.ObjectMeta.Annotations == nil {
+		podTemplate.ObjectMeta.Annotations = make(map[string]string)
+	}
+	for k, v := range js.GetAnnotations() {
+		podTemplate.ObjectMeta.Annotations[k] = v
+	}
+
 	containers := []corev1.Container{}
 	for i, c := range podTemplate.Spec.Containers {
 		if c.Name == "" {
@@ -56,9 +63,15 @@ func MakeJob(js *v1alpha1.JobSource) *batchv1.Job {
 			Name:            JobName(js.GetObjectMeta()),
 			Namespace:       js.GetObjectMeta().GetNamespace(),
 			Labels:          Labels(js),
+			Annotations:     make(map[string]string),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(js)},
 		},
 		Spec: *spec,
+	}
+
+	// Extend annotations
+	for k, v := range js.GetAnnotations() {
+		job.Annotations[k] = v
 	}
 
 	// TODO(spencer-p) Set job.Spec.Template.ObjectMeta.Annotations or .Labels?
