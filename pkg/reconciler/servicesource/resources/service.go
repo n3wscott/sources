@@ -41,7 +41,7 @@ func MakeService(source *v1alpha1.ServiceSource) *servingv1beta1.Service {
 	if podTemplate.ObjectMeta.Annotations == nil {
 		podTemplate.ObjectMeta.Annotations = make(map[string]string)
 	}
-	for k, v := range js.GetAnnotations() {
+	for k, v := range source.GetAnnotations() {
 		podTemplate.ObjectMeta.Annotations[k] = v
 	}
 

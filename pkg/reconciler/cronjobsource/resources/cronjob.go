@@ -53,7 +53,7 @@ func MakeCronJob(s *v1alpha1.CronJobSource) *batchv1beta1.CronJob {
 	if podTemplate.ObjectMeta.Annotations == nil {
 		podTemplate.ObjectMeta.Annotations = make(map[string]string)
 	}
-	for k, v := range js.GetAnnotations() {
+	for k, v := range s.GetAnnotations() {
 		podTemplate.ObjectMeta.Annotations[k] = v
 	}
 
