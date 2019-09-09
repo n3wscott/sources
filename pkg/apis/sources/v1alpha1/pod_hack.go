@@ -52,12 +52,12 @@ func (s *SourcePod) Validate(context.Context) *apis.FieldError {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Pods have Binding subresources that we have to pretend to handle.
-type EvilBinding corev1.Binding
+type NOPBinding corev1.Binding
 
-func (_ *EvilBinding) SetDefaults(ctx context.Context) {
+func (_ *NOPBinding) SetDefaults(ctx context.Context) {
 	// nop
 }
 
-func (_ *EvilBinding) Validate(context.Context) *apis.FieldError {
+func (_ *NOPBinding) Validate(context.Context) *apis.FieldError {
 	return nil
 }
