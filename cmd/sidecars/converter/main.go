@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -111,7 +112,9 @@ func main() {
 	}
 	go func() {
 		log.Println("Starting convert server")
-		log.Fatal(s.ListenAndServe())
+		if err := s.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal(err)
+		}
 	}()
 
 	<-shutdownChan
