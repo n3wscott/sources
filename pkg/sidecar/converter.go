@@ -70,28 +70,26 @@ func AddConverter(pod *corev1.Pod) {
 	convertContainer := corev1.Container{
 		Name:  "source-converter",
 		Image: img,
-		Ports: []corev1.ContainerPort{corev1.ContainerPort{
+		Ports: []corev1.ContainerPort{{
 			HostPort:      CONVERT_PORT,
 			ContainerPort: CONVERT_PORT,
 		}},
-		Env: []corev1.EnvVar{
-			corev1.EnvVar{
-				Name:  "PORT",
-				Value: CONVERT_PORT_STR,
-			}, corev1.EnvVar{
-				Name:  "K_SINK",
-				Value: srcSinkURI.Value,
-			}, corev1.EnvVar{
-				Name:  "K_OUTPUT_FORMAT",
-				Value: srcOutputFormat.Value,
-			}, corev1.EnvVar{
-				Name:  "EVENT_SOURCE",
-				Value: "http://todo",
-			}, corev1.EnvVar{
-				Name:  "EVENT_TYPE",
-				Value: "todo",
-			},
-		},
+		Env: []corev1.EnvVar{{
+			Name:  "PORT",
+			Value: CONVERT_PORT_STR,
+		}, {
+			Name:  "K_SINK",
+			Value: srcSinkURI.Value,
+		}, {
+			Name:  "K_OUTPUT_FORMAT",
+			Value: srcOutputFormat.Value,
+		}, {
+			Name:  "EVENT_SOURCE",
+			Value: "http://todo",
+		}, {
+			Name:  "EVENT_TYPE",
+			Value: "todo",
+		}},
 	}
 
 	// Rewire the source container
