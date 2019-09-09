@@ -84,6 +84,12 @@ func AddConverter(pod *corev1.Pod) {
 			}, corev1.EnvVar{
 				Name:  "K_OUTPUT_FORMAT",
 				Value: srcOutputFormat.Value,
+			}, corev1.EnvVar{
+				Name:  "EVENT_SOURCE",
+				Value: "http://todo",
+			}, corev1.EnvVar{
+				Name:  "EVENT_TYPE",
+				Value: "todo",
 			},
 		},
 	}
