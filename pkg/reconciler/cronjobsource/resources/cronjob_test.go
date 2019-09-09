@@ -77,11 +77,12 @@ func TestMakeCronJob(t *testing.T) {
 			SuccessfulJobsHistoryLimit: ptr.Int32(100),
 			Suspend:                    ptr.Bool(false),
 			JobTemplate: batchv1beta1.JobTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: Labels(in),
-				},
 				Spec: batchv1.JobSpec{
 					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels:      Labels(in),
+							Annotations: make(map[string]string),
+						},
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
 								corev1.Container{

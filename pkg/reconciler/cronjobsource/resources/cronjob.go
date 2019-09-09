@@ -43,7 +43,7 @@ func MakeCronJob(s *v1alpha1.CronJobSource) *batchv1beta1.CronJob {
 
 	// Copy the Source's spec into the new CronJob object, then make changes
 	s.Spec.CronJobSpec.DeepCopyInto(&cronjob.Spec)
-	podTemplate := &cronjob.Spec.JobTemplate
+	podTemplate := &cronjob.Spec.JobTemplate.Spec.Template
 
 	if podTemplate.ObjectMeta.Labels == nil {
 		podTemplate.ObjectMeta.Labels = make(map[string]string)
@@ -58,7 +58,7 @@ func MakeCronJob(s *v1alpha1.CronJobSource) *batchv1beta1.CronJob {
 	}
 
 	// TODO(spencer-p) Eliminate extra copying here
-	containers := podTemplate.Spec.Template.Spec.Containers
+	containers := podTemplate.Spec.Containers
 	for i, _ := range containers {
 		if containers[i].Name == "" {
 			containers[i].Name = fmt.Sprintf("cronjobsource%d", i)
