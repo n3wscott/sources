@@ -42,7 +42,7 @@ func TestCronJobSourceReady(t *testing.T) {
 		name: "mark job failed",
 		body: func(s *CronJobSourceStatus) {
 			s.InitializeConditions()
-			s.MarkNoCronJob("")
+			s.MarkNoCronJob("", "")
 		},
 		want: false,
 	}, {
@@ -65,7 +65,7 @@ func TestCronJobSourceReady(t *testing.T) {
 		body: func(s *CronJobSourceStatus) {
 			s.InitializeConditions()
 			s.MarkSink("example.com")
-			s.MarkNoCronJob("")
+			s.MarkNoCronJob("", "")
 		},
 		want: false,
 	}, {
@@ -73,19 +73,10 @@ func TestCronJobSourceReady(t *testing.T) {
 		body: func(s *CronJobSourceStatus) {
 			s.InitializeConditions()
 			s.MarkSink("example.com")
-			s.MarkNoCronJob("")
+			s.MarkNoCronJob("", "")
 			s.MarkCronJobCreated()
 		},
 		want: true,
-	}, {
-		name: "mark created, then sink",
-		body: func(s *CronJobSourceStatus) {
-			s.InitializeConditions()
-			// This exchange should not be possible. CronJob should not start running until there is a sink.
-			s.MarkCronJobCreated()
-			s.MarkSink("example.com")
-		},
-		want: false,
 	}}
 
 	for _, test := range tests {
