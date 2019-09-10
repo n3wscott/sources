@@ -103,6 +103,7 @@ func TestSourceDuckTypes(t *testing.T) {
 		iface  duck.Implementable
 	}{
 		{&JobSource{}, &duckv1beta1.Source{}},
+		{&CronJobSource{}, &duckv1beta1.Source{}},
 		{&ServiceSource{}, &duckv1beta1.Source{}},
 		{&ServiceSource{}, &duckv1beta1.Addressable{}},
 	}
