@@ -25,6 +25,7 @@ import (
 	sourcesclient "github.com/n3wscott/sources/pkg/client/injection/client"
 	eventingreconciler "knative.dev/eventing/pkg/reconciler"
 	"knative.dev/pkg/configmap"
+	"knative.dev/pkg/kmeta"
 	"knative.dev/pkg/resolver"
 )
 
@@ -82,4 +83,23 @@ func (r *Base) ReconcileSink(ctx context.Context, source v1alpha1.Source) error 
 	source.GetStatus().MarkSink(uri)
 
 	return nil
+}
+
+func Labels(owner kmeta.OwnerRefable, labelKey string) map[string]string {
+	labels := make(map[string]string)
+	copyMap(labels, owner.GetObjectMeta().GetLabels())
+	labels[labelKey] = owner.GetObjectMeta().GetName()
+	return labels
+}
+
+func Annotations(owner kmeta.OwnerRefable) map[string]string {
+	atns := make(map[string]string)
+	copyMap(atns, owner.GetObjectMeta().GetAnnotations())
+	return atns
+}
+
+func copyMap(dest, src map[string]string) {
+	for k, v := range src {
+		dest[k] = v
+	}
 }

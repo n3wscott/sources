@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
+	"github.com/n3wscott/sources/pkg/reconciler"
 	"knative.dev/pkg/kmeta"
 
 	corev1 "k8s.io/api/core/v1"
@@ -33,17 +34,8 @@ const (
 
 func MakeService(source *v1alpha1.ServiceSource) *servingv1beta1.Service {
 	podTemplate := &source.Spec.Template
-	if podTemplate.ObjectMeta.Labels == nil {
-		podTemplate.ObjectMeta.Labels = make(map[string]string)
-	}
-	podTemplate.ObjectMeta.Labels[labelKey] = source.GetObjectMeta().GetName()
-
-	if podTemplate.ObjectMeta.Annotations == nil {
-		podTemplate.ObjectMeta.Annotations = make(map[string]string)
-	}
-	for k, v := range source.GetAnnotations() {
-		podTemplate.ObjectMeta.Annotations[k] = v
-	}
+	podTemplate.Labels = reconciler.Labels(source, labelKey)
+	podTemplate.Annotations = reconciler.Annotations(source)
 
 	containers := []corev1.Container{}
 	for i, c := range podTemplate.Spec.Containers {
@@ -60,7 +52,8 @@ func MakeService(source *v1alpha1.ServiceSource) *servingv1beta1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            ServiceName(source.GetObjectMeta()),
 			Namespace:       source.GetObjectMeta().GetNamespace(),
-			Labels:          Labels(source),
+			Labels:          reconciler.Labels(source, labelKey),
+			Annotations:     reconciler.Annotations(source),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(source)},
 		},
 		Spec: source.Spec.ServiceSpec,
@@ -73,10 +66,4 @@ func MakeService(source *v1alpha1.ServiceSource) *servingv1beta1.Service {
 func ServiceName(owner metav1.Object) string {
 	// For now, this just returns the owner's name.
 	return owner.GetName()
-}
-
-func Labels(owner kmeta.OwnerRefable) map[string]string {
-	return map[string]string{
-		labelKey: owner.GetObjectMeta().GetName(),
-	}
 }

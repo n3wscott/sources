@@ -51,7 +51,6 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&ServiceSourceList{},
 		&CronJobSource{},
 		&CronJobSourceList{},
-		&SourcePod{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

@@ -39,9 +39,9 @@ var _ runtime.Object = &SourcePod{}
 
 func (s *SourcePod) SetDefaults(ctx context.Context) {
 	pod := (*corev1.Pod)(s)
-	if sidecar.ShouldAddConverter(pod) {
-		log.Println("Adding converter")
-		sidecar.AddConverter(pod)
+	if sidecar.ShouldInjectAdapter(pod) {
+		log.Println("Adding adapter")
+		sidecar.Inject(pod)
 	}
 }
 

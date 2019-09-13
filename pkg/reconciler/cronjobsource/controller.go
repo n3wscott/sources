@@ -22,7 +22,7 @@ import (
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	cjsinformer "github.com/n3wscott/sources/pkg/client/injection/informers/sources/v1alpha1/cronjobsource"
 	"github.com/n3wscott/sources/pkg/reconciler"
-	cronjobinformer "knative.dev/pkg/injection/informers/kubeinformers/batchv1beta1/cronjob"
+	cronjobinformer "knative.dev/pkg/client/injection/kube/informers/batch/v1beta1/cronjob"
 
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/configmap"

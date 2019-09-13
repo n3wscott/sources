@@ -22,7 +22,7 @@ import (
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	jsinformer "github.com/n3wscott/sources/pkg/client/injection/informers/sources/v1alpha1/jobsource"
 	"github.com/n3wscott/sources/pkg/reconciler"
-	jobinformer "knative.dev/pkg/injection/informers/kubeinformers/batchv1/job"
+	jobinformer "knative.dev/pkg/client/injection/kube/informers/batch/v1/job"
 
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/configmap"

@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
+	"github.com/n3wscott/sources/pkg/reconciler"
 	"knative.dev/pkg/kmeta"
 
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
@@ -36,7 +37,8 @@ func MakeCronJob(s *v1alpha1.CronJobSource) *batchv1beta1.CronJob {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            CronJobName(s.GetObjectMeta()),
 			Namespace:       s.GetObjectMeta().GetNamespace(),
-			Labels:          Labels(s),
+			Labels:          reconciler.Labels(s, labelKey),
+			Annotations:     reconciler.Annotations(s),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(s)},
 		},
 	}
@@ -44,18 +46,8 @@ func MakeCronJob(s *v1alpha1.CronJobSource) *batchv1beta1.CronJob {
 	// Copy the Source's spec into the new CronJob object, then make changes
 	s.Spec.CronJobSpec.DeepCopyInto(&cronjob.Spec)
 	podTemplate := &cronjob.Spec.JobTemplate.Spec.Template
-
-	if podTemplate.ObjectMeta.Labels == nil {
-		podTemplate.ObjectMeta.Labels = make(map[string]string)
-	}
-	podTemplate.ObjectMeta.Labels[labelKey] = s.GetObjectMeta().GetName()
-
-	if podTemplate.ObjectMeta.Annotations == nil {
-		podTemplate.ObjectMeta.Annotations = make(map[string]string)
-	}
-	for k, v := range s.GetAnnotations() {
-		podTemplate.ObjectMeta.Annotations[k] = v
-	}
+	podTemplate.Labels = reconciler.Labels(s, labelKey)
+	podTemplate.Annotations = reconciler.Annotations(s)
 
 	// TODO(spencer-p) Eliminate extra copying here
 	containers := podTemplate.Spec.Containers
@@ -67,17 +59,10 @@ func MakeCronJob(s *v1alpha1.CronJobSource) *batchv1beta1.CronJob {
 		containers[i].Env = append(containers[i].Env, corev1.EnvVar{Name: "K_OUTPUT_FORMAT", Value: string(s.Spec.OutputFormat)})
 	}
 
-	// TODO(spencer-p) Set .Annotations or .Labels?
 	return cronjob
 }
 
 func CronJobName(owner metav1.Object) string {
 	// Reuse the owner's name.
 	return owner.GetName()
-}
-
-func Labels(owner kmeta.OwnerRefable) map[string]string {
-	return map[string]string{
-		labelKey: owner.GetObjectMeta().GetName(),
-	}
 }
