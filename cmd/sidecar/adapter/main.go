@@ -70,11 +70,28 @@ func makeReceive(ceclient cloudevents.Client, eventtype string, eventsrc cloudev
 		}
 
 		log.Printf("Sending event with %d bytes of data\n", len(data))
-		if _, err := ceclient.Send(r.Context(), event); err != nil {
+		resp, err := ceclient.Send(r.Context(), event)
+		if err != nil {
 			log.Println("Failed to send cloud event:", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
+		if resp == nil {
+			// No response from sink
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		respBytes, err := resp.DataBytes()
+		if err != nil {
+			log.Println("Failed to read response:", err)
+			// Assume success so that event is not duplicated
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(respBytes)
 	}
 }
 
@@ -111,6 +128,7 @@ func main() {
 		Addr: addr + ":" + env.Port,
 	}
 	go func() {
+		log.Println("Sink is configured as", env.Sink)
 		log.Println("Starting adapter server")
 		if err := s.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal(err)

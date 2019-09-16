@@ -1,7 +1,7 @@
 apiVersion: eventing.knative.dev/v1alpha1
 kind: Trigger
 metadata:
-  name: xkcd-chat
+  name: xkcd-trigger
   namespace: default
 spec:
   filter:
@@ -9,6 +9,6 @@ spec:
       type: xkcd.comic
   subscriber:
     ref:
-      apiVersion: serving.knative.dev/v1beta1
+      apiVersion: serving.knative.dev/v1alpha1
       kind: Service
       name: xkcd-sink
