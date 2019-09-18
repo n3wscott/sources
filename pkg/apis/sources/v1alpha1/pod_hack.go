@@ -23,18 +23,27 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/pkg/apis"
+	"knative.dev/pkg/webhook"
 
 	"github.com/n3wscott/sources/pkg/sidecar"
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+/*
+This file contains a hack to perform sidecar injection on Pods via the Knative webhook for
+Defaultable/Validatable resources.  The Knative webhook allows mutation of objects, but only in the
+SetDefaults method of a Defaultable type.  To perform injection of sidecars, we create a type alias
+for K8s Pods and put a SetDefaults method on it that injects a sidecar.  This is a temporary hack to
+avoid writing a new client library for sidecar injection.
+*/
 
 // SourcePod is an alias for an actual Pod which allows us to put methods on it.
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type SourcePod corev1.Pod
 
 // Assert that it satisfies the webhook.GenericCRD interface
-var _ apis.Defaultable = &SourcePod{}
+//var _ webhook.GenericCRD = &SourcePod{}
 var _ apis.Validatable = &SourcePod{}
+var _ apis.Defaultable = &SourcePod{}
 var _ runtime.Object = &SourcePod{}
 
 func (s *SourcePod) SetDefaults(ctx context.Context) {
@@ -49,10 +58,11 @@ func (s *SourcePod) Validate(context.Context) *apis.FieldError {
 	return nil
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // Pods have Binding subresources that we have to pretend to handle.
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type NOPBinding corev1.Binding
+
+var _ webhook.GenericCRD = &NOPBinding{}
 
 func (_ *NOPBinding) SetDefaults(ctx context.Context) {
 	// nop

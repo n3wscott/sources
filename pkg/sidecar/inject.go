@@ -29,11 +29,11 @@ import (
 )
 
 const (
-	IMAGE_KEY    = "K_SOURCE_ADAPTER_IMAGE"
-	ADAPTER_PORT = 38080
-	LABEL_NAME   = "eventing.knative.dev/inject"
-	ADAPTER_KEY  = "cloudevents-adapter"
-	FILTER_KEY   = "cloudevents-filter"
+	IMAGE_KEY            = "K_SOURCE_ADAPTER_IMAGE"
+	SIDECAR_DEFAULT_PORT = 38080
+	LABEL_NAME           = "eventing.knative.dev/inject"
+	ADAPTER_KEY          = "cloudevents-adapter"
+	FILTER_KEY           = "cloudevents-filter"
 
 	CE_LABEL_PREFIX  = "cloudevents.io/"
 	EVENT_SOURCE_KEY = "source"
@@ -84,6 +84,18 @@ func ShouldInjectAdapter(pod *corev1.Pod) bool {
 	return true
 }
 
+// Inject inspects and rewrites the Pod to have a Knative Adapter/Filter sidecar.
+func Inject(pod *corev1.Pod) {
+	args, errs := constructArgs(pod)
+	if errs != nil {
+		log.Printf("Cannot inject sidecar: %v\n", errs)
+		return
+	}
+
+	injectSidecar(pod, args)
+}
+
+// constructArgs inspects a Pod and the environment for configuration of the sidecar.
 func constructArgs(pod *corev1.Pod) (*SidecarArgs, *apis.FieldError) {
 	var errs *apis.FieldError
 
@@ -97,7 +109,7 @@ func constructArgs(pod *corev1.Pod) (*SidecarArgs, *apis.FieldError) {
 		}
 	}
 
-	port, err := findPort(pod, ADAPTER_PORT)
+	port, err := findPort(pod, SIDECAR_DEFAULT_PORT)
 	if err != nil {
 		errs = errs.Also(apis.ErrGeneric("No free port: " + err.Error()).ViaField("spec.containers[i].ports"))
 	}
@@ -160,20 +172,10 @@ func injectSidecar(pod *corev1.Pod, args *SidecarArgs) {
 	pod.Spec.Containers = append(pod.Spec.Containers, sidecarContainer)
 }
 
-// Inject inspects and rewrites the Pod to have a Knative Adapter/Filter sidecar.
-func Inject(pod *corev1.Pod) {
-	args, errs := constructArgs(pod)
-	if errs != nil {
-		log.Printf("Cannot inject sidecar: %v\n", errs)
-		return
-	}
-
-	injectSidecar(pod, args)
-}
-
 // getSourceContainer finds a container that looks like it was configured as a source. It returns
 // the container itself, pointers to its useful environment variables, and an OK bool signifying
 // that the container was found.
+// TODO(n3wscott): There may be multiple source containers.
 func getSourceContainer(pod *corev1.Pod) (
 	container *corev1.Container,
 	sinkURI *corev1.EnvVar,

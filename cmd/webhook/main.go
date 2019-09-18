@@ -142,8 +142,12 @@ func main() {
 		v1alpha1.SchemeGroupVersion.WithKind("JobSource"):     &v1alpha1.JobSource{},
 		v1alpha1.SchemeGroupVersion.WithKind("CronJobSource"): &v1alpha1.CronJobSource{},
 		v1alpha1.SchemeGroupVersion.WithKind("ServiceSource"): &v1alpha1.ServiceSource{},
-		corev1.SchemeGroupVersion.WithKind("Pod"):             &v1alpha1.SourcePod{},
-		corev1.SchemeGroupVersion.WithKind("Binding"):         &v1alpha1.NOPBinding{},
+
+		// Bind an alias of the Pod type to corev1.Pod for sidecar injection (via SetDefaults).
+		// The Knative webhook will subscribe to Pods and all subresources, which includes Bindings.
+		// We have to register a nop handler for Bindings so that all Pods don't get rejected.
+		corev1.SchemeGroupVersion.WithKind("Pod"):     &v1alpha1.SourcePod{},
+		corev1.SchemeGroupVersion.WithKind("Binding"): &v1alpha1.NOPBinding{},
 	}
 	SharedMain(handlers)
 
