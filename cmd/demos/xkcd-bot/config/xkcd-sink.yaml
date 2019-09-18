@@ -1,0 +1,16 @@
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: xkcd-sink
+spec:
+  template:
+    spec:
+      containers:
+      - image: github.com/n3wscott/sources/cmd/demos/xkcd-bot/cmd/bot
+        env:
+        - name: "GCHAT_WEBHOOK"
+          valueFrom:
+            secretKeyRef:
+              name: "xkcd-secrets"
+              key: "gchat-webhook"
+

@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
+	"github.com/n3wscott/sources/pkg/reconciler"
 	"knative.dev/eventing/pkg/utils"
 	"knative.dev/pkg/kmeta"
 
@@ -35,10 +36,8 @@ const (
 func MakeJob(js *v1alpha1.JobSource) *batchv1.Job {
 	spec := js.Spec.JobSpec.DeepCopy()
 	podTemplate := &spec.Template
-	if podTemplate.ObjectMeta.Labels == nil {
-		podTemplate.ObjectMeta.Labels = make(map[string]string)
-	}
-	podTemplate.ObjectMeta.Labels[labelKey] = js.GetObjectMeta().GetName()
+	podTemplate.Labels = reconciler.Labels(js, labelKey)
+	podTemplate.Annotations = reconciler.Annotations(js)
 
 	containers := []corev1.Container{}
 	for i, c := range podTemplate.Spec.Containers {
@@ -55,22 +54,21 @@ func MakeJob(js *v1alpha1.JobSource) *batchv1.Job {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            JobName(js.GetObjectMeta()),
 			Namespace:       js.GetObjectMeta().GetNamespace(),
-			Labels:          Labels(js),
+			Labels:          reconciler.Labels(js, labelKey),
+			Annotations:     reconciler.Annotations(js),
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(js)},
 		},
 		Spec: *spec,
 	}
 
-	// TODO(spencer-p) Set job.Spec.Template.ObjectMeta.Annotations or .Labels?
+	// Extend annotations
+	for k, v := range js.GetAnnotations() {
+		job.Annotations[k] = v
+	}
+
 	return job
 }
 
 func JobName(owner metav1.Object) string {
 	return utils.GenerateFixedName(owner, owner.GetName()+"-jobsource-")
-}
-
-func Labels(owner kmeta.OwnerRefable) map[string]string {
-	return map[string]string{
-		labelKey: owner.GetObjectMeta().GetName(),
-	}
 }

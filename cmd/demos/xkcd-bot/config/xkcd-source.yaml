@@ -1,0 +1,28 @@
+apiVersion: sources.knative.dev/v1alpha1
+kind: CronJobSource
+metadata:
+  name: xkcd-source
+  labels:
+    eventing.knative.dev/inject: "cloudevents-adapter"
+  annotations:
+    cloudevents.io/type: "xkcd.comic"
+    cloudevents.io/source: "com.xkcd"
+spec:
+  sink:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Broker
+    name: default
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: xkcd
+            image: appropriate/curl
+            args:
+            - /bin/sh
+            - -c
+            - curl "https://xkcd.com/info.0.json" | curl -v -X POST -d @- "$K_SINK"
+                   --retry 10 --retry-connrefused;
+              curl -v "$K_SINK"/quitquitquit;

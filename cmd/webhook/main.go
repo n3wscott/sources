@@ -23,6 +23,7 @@ import (
 	"log"
 
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -105,18 +106,20 @@ func SharedMain(handlers map[schema.GroupVersionKind]webhook.GenericCRD, factori
 	}
 
 	options := webhook.ControllerOptions{
-		ServiceName:    "webhook",
-		DeploymentName: "webhook",
-		Namespace:      system.Namespace(),
-		Port:           8443,
-		SecretName:     "webhook-certs",
-		WebhookName:    fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
+		ServiceName:                 "webhook",
+		DeploymentName:              "webhook",
+		Namespace:                   system.Namespace(),
+		Port:                        8443,
+		SecretName:                  "webhook-certs",
+		ResourceMutatingWebhookName: fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
 	}
 
-	controller, err := webhook.NewAdmissionController(
+	controller, err := webhook.New(
 		kubeClient,
 		options,
-		handlers,
+		map[string]webhook.AdmissionController{
+			"/": webhook.NewResourceAdmissionController(handlers, options, false),
+		},
 		logger,
 		func(ctx context.Context) context.Context {
 			for _, store := range stores {
@@ -124,7 +127,6 @@ func SharedMain(handlers map[schema.GroupVersionKind]webhook.GenericCRD, factori
 			}
 			return ctx
 		},
-		true,
 	)
 	if err != nil {
 		logger.Fatalw("Failed to create admission controller", zap.Error(err))
@@ -140,6 +142,12 @@ func main() {
 		v1alpha1.SchemeGroupVersion.WithKind("JobSource"):     &v1alpha1.JobSource{},
 		v1alpha1.SchemeGroupVersion.WithKind("CronJobSource"): &v1alpha1.CronJobSource{},
 		v1alpha1.SchemeGroupVersion.WithKind("ServiceSource"): &v1alpha1.ServiceSource{},
+
+		// Bind an alias of the Pod type to corev1.Pod for sidecar injection (via SetDefaults).
+		// The Knative webhook will subscribe to Pods and all subresources, which includes Bindings.
+		// We have to register a nop handler for Bindings so that all Pods don't get rejected.
+		corev1.SchemeGroupVersion.WithKind("Pod"):     &v1alpha1.SourcePod{},
+		corev1.SchemeGroupVersion.WithKind("Binding"): &v1alpha1.NOPBinding{},
 	}
 	SharedMain(handlers)
 
