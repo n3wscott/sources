@@ -23,17 +23,17 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/n3wscott/sources/pkg/apis/sources/v1alpha1"
 	ceclient "github.com/n3wscott/sources/pkg/cloudeventclient"
+	"knative.dev/pkg/signals"
 )
 
 type envConfig struct {
 	// Source options
+	// TODO(n3wscott): Use CE overrides
 	Sink         string                    `envconfig:"K_SINK" required:"true"`
 	OutputFormat v1alpha1.OutputFormatType `envconfig:"K_OUTPUT_FORMAT" required:"true"`
 	Source       string                    `envconfig:"EVENT_SOURCE" required:"true"`
@@ -106,13 +106,14 @@ func main() {
 		log.Fatal("Could not create CloudEvents client: ", err)
 	}
 
-	shutdownChan := make(chan os.Signal, 1)
-	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
+	// create a cancelable context that will be done if we get a termination signal
+	ctx, shutdown := context.WithCancel(signals.NewContext())
 
 	http.Handle("/", makeReceive(ceclient, env.Type, *cloudevents.ParseURLRef(env.Source)))
 
+	// quitquitquit is exposed for short lived resources to signal termination to the rest of the pod.
 	http.HandleFunc("/quitquitquit", func(w http.ResponseWriter, r *http.Request) {
-		shutdownChan <- syscall.SIGTERM
+		shutdown()
 		w.WriteHeader(http.StatusOK)
 	})
 
@@ -135,7 +136,7 @@ func main() {
 		}
 	}()
 
-	<-shutdownChan
+	<-ctx.Done()
 	log.Println("Received shutdown signal")
 	s.Shutdown(context.Background())
 	os.Exit(0)
